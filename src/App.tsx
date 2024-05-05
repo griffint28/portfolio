@@ -8,7 +8,7 @@ function App() {
       <header className="App-header">
         <img src={logo} className="App-logo" alt="logo"/>
         <p>
-          Welcome to Thomas's React App! This is a test to see if the pipeline is working.
+          Welcome to Thomas's React App! 
         </p>
       </header>
     </div>
