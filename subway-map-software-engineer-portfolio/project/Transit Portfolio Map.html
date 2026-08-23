@@ -1,0 +1,347 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Thomas Griffin — Lowcountry Transit Authority</title>
+<link rel="stylesheet" href="_ds/organic-745a8e6d-2071-4912-904e-4bff3ece9f35/styles.css">
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha384-sHL9NAb7lN7rfvG5lfHpm643Xkcjzp4jFvuavGOndn6pjVqS6ny56CAt3nsEVT4H" crossorigin="anonymous">
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha384-cxOPjt7s7Iz04uaHJceBmS+qpjv2JkIHNVcuOrM+YHwZOmJGBXI00mdUXEq65HTH" crossorigin="anonymous"></script>
+<style>
+  html,body{margin:0;height:100%;overflow:hidden;background:var(--color-bg);color:var(--color-text);font-family:var(--font-body);}
+  a{color:var(--color-accent-700);text-decoration:none;}
+  a:hover{color:var(--color-accent-900);text-decoration:underline;}
+  #map{position:absolute;inset:0;background:var(--color-bg);}
+  /* pale, label-free basemap warmed into the Organic ground */
+  .leaflet-tile-pane{filter:sepia(.4) saturate(.78) hue-rotate(-8deg) brightness(1.04) contrast(.9);}
+  .leaflet-container{background:var(--color-accent-2-100);font-family:var(--font-body);}
+  .leaflet-control-attribution{background:color-mix(in srgb,var(--color-neutral-100) 82%,transparent)!important;font:400 10px var(--font-body)!important;color:var(--color-neutral-600)!important;border-radius:999px 0 0 0;padding:3px 8px!important;}
+  .leaflet-control-zoom{border:none!important;box-shadow:var(--shadow-sm)!important;border-radius:999px!important;overflow:hidden;}
+  .leaflet-control-zoom a{background:var(--color-neutral-100)!important;color:var(--color-neutral-800)!important;border:none!important;width:32px!important;height:32px!important;line-height:32px!important;font-size:17px!important;}
+  .leaflet-control-zoom a:hover{background:var(--color-accent-100)!important;color:var(--color-accent-900)!important;}
+  .leaflet-bar a:focus-visible{outline:2px solid var(--color-accent);outline-offset:2px;}
+
+  .panel{position:absolute;z-index:600;background:var(--color-neutral-100);border:1px solid var(--color-neutral-300);border-radius:var(--radius-md);box-shadow:var(--shadow-sm);}
+  .kicker{font:600 9.5px/1 var(--font-body);letter-spacing:.13em;text-transform:uppercase;color:var(--color-accent-700);}
+
+  /* station markers — white disc, line-coloured ring, like a printed transit map */
+  .stop{cursor:pointer;position:relative;box-sizing:border-box;border-radius:999px;background:var(--color-neutral-100);box-shadow:var(--shadow-sm);}
+  .stop:focus-visible{outline:2px solid var(--color-accent);outline-offset:3px;}
+  .stop.current{animation:pulse-dot 2.4s ease-in-out infinite;}
+  .stop.current::before{content:"";position:absolute;inset:-6px;border-radius:999px;background:var(--color-accent);animation:pulse-ring 2.4s cubic-bezier(.2,.6,.4,1) infinite;z-index:-1;}
+  @keyframes pulse-ring{0%{transform:scale(.8);opacity:.55}70%,100%{transform:scale(2);opacity:0}}
+  @keyframes pulse-dot{0%,100%{transform:scale(1)}50%{transform:scale(1.1)}}
+
+  /* labels get a soft knockout so lines pass cleanly behind the type */
+  .stop-label{background:color-mix(in srgb,var(--color-bg) 74%,transparent);border:none;box-shadow:none;padding:3px 8px;margin:0;white-space:nowrap;border-radius:10px;}
+  .stop-label::before{display:none;}
+  .stop-label .sl-name{font:600 13.5px var(--font-body);color:var(--color-neutral-900);}
+  .stop-label .sl-dates{font:600 11.5px var(--font-body);color:var(--color-accent-700);}
+  .stop-label .sl-place{font:400 11px var(--font-body);color:var(--color-neutral-700);}
+  .stop-label.intern .sl-dates{color:var(--color-accent-2-700);}
+  .stop-label.minor{background:color-mix(in srgb,var(--color-bg) 64%,transparent);padding:2px 7px;}
+  .stop-label.minor .sl-name{font-weight:500;font-size:12px;color:var(--color-neutral-700);}
+
+  #nameplate{bottom:24px;left:24px;max-width:300px;padding:16px 18px;border-radius:var(--radius-lg);box-shadow:var(--shadow-md);overflow:hidden;}
+  #nameplate .rule{position:absolute;top:0;left:0;right:0;height:5px;background:linear-gradient(90deg,var(--color-accent) 0 60%,var(--color-accent-2) 60% 100%);}
+  #key{top:24px;right:24px;padding:12px 15px;}
+  #key .row{display:flex;align-items:center;gap:8px;font:400 12px var(--font-body);color:var(--color-neutral-800);}
+  #key .sw{width:22px;height:5px;border-radius:999px;flex:0 0 auto;}
+  #key .sw.main{background:var(--color-accent);}
+  #key .sw.intern{background:var(--color-accent-2);}
+  #key .sw.here{width:11px;height:11px;background:var(--color-accent);box-shadow:0 0 0 3px var(--color-accent-200);}
+  #key .sw.xc{width:12px;height:12px;border-radius:999px;background:var(--color-neutral-100);border:3px solid var(--color-neutral-800);box-sizing:border-box;}
+
+  #caption{position:absolute;left:50%;top:22px;transform:translateX(-50%);z-index:900;display:none;align-items:center;gap:10px;background:var(--color-neutral-100);border:1px solid var(--color-neutral-300);border-radius:999px;padding:7px 7px 7px 15px;box-shadow:var(--shadow-md);}
+  #caption .region{font:400 15px var(--font-heading);color:var(--color-neutral-900);white-space:nowrap;}
+
+  .icon-btn{border:none;background:var(--color-neutral-200);cursor:pointer;width:30px;height:30px;border-radius:999px;display:grid;place-items:center;font-size:15px;color:var(--color-neutral-700);}
+  .icon-btn:hover{background:var(--color-neutral-300);}
+  .icon-btn:focus-visible{outline:2px solid var(--color-accent);outline-offset:2px;}
+
+  #contact-btn{position:absolute;left:50%;bottom:24px;transform:translateX(-50%);z-index:600;font:600 12px var(--font-body);color:var(--color-bg);background:var(--color-accent);border:none;border-radius:999px;padding:10px 17px;cursor:pointer;box-shadow:var(--shadow-sm);}
+  #contact-btn:hover{background:var(--color-accent-600);}
+  #contact-btn:focus-visible{outline:2px solid var(--color-accent);outline-offset:3px;}
+
+  .scrim{position:fixed;inset:0;z-index:1000;display:none;align-items:center;background:color-mix(in srgb,var(--color-neutral-900) 16%,transparent);}
+  .scrim.right{justify-content:flex-end;padding-right:min(6vw,72px);}
+  .scrim.center{justify-content:center;}
+  .card{background:var(--color-neutral-100);border-radius:var(--radius-lg);box-shadow:var(--shadow-lg);padding:26px 28px;position:relative;animation:card-in .18s ease-out;}
+  @keyframes card-in{from{opacity:0;transform:translateY(8px) scale(.98)}to{opacity:1;transform:none}}
+  #detail-card{width:min(450px,86vw);max-height:76vh;overflow:auto;}
+  #contact-card{width:min(430px,86vw);}
+  .card h3{font:400 23px/1.25 var(--font-heading);margin:0;}
+  .card .badge{font:600 9.5px var(--font-body);letter-spacing:.08em;text-transform:uppercase;color:var(--color-bg);background:var(--color-accent);border-radius:999px;padding:3px 9px;white-space:nowrap;}
+  .card .dates{font:600 15px var(--font-body);color:var(--color-accent-700);margin:10px 0 3px;}
+  .card .meta{font:400 13.5px var(--font-body);color:var(--color-neutral-700);margin-bottom:14px;}
+  .card ul{margin:0;padding-left:18px;color:var(--color-neutral-800);font:400 14px/1.6 var(--font-body);}
+  .card li{margin-bottom:6px;}
+  .tagrow{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:14px;}
+  .tagrow span{font:500 11px var(--font-body);padding:3px 10px;border-radius:999px;}
+</style>
+</head>
+<body>
+
+<div id="map"></div>
+
+<div class="panel" id="nameplate">
+  <div class="rule"></div>
+  <div class="kicker">Lowcountry Transit Authority</div>
+  <h1 style="font:400 26px/1.1 var(--font-heading);margin:8px 0 5px;">Thomas Griffin</h1>
+  <div style="font:600 13px/1.3 var(--font-body);color:var(--color-accent-700);margin-bottom:6px;">Software Engineer</div>
+  <p style="font:400 12px/1.45 var(--font-body);color:var(--color-neutral-700);margin:0;text-wrap:pretty;">Two lines across the real Lowcountry, interchanging at the College of Charleston.</p>
+</div>
+
+<div class="panel" id="key">
+  <div style="font:600 9.5px/1 var(--font-body);letter-spacing:.1em;text-transform:uppercase;color:var(--color-neutral-600);margin-bottom:9px;">Map Key</div>
+  <div style="display:flex;flex-direction:column;gap:8px;">
+    <div class="row"><span class="sw main"></span>Career line</div>
+    <div class="row"><span class="sw intern"></span>Internship line</div>
+    <div class="row"><span class="sw xc"></span>Interchange</div>
+    <div class="row"><span class="sw here"></span>You are here</div>
+  </div>
+  <div style="border-top:1px solid var(--color-neutral-300);margin:10px 0 8px;"></div>
+  <div style="font:500 11px/1.4 var(--font-body);color:var(--color-neutral-600);max-width:152px;">Tap a stop to fly the map to that part of the Lowcountry.</div>
+</div>
+
+<div id="caption">
+  <span class="kicker">Zoomed to</span>
+  <span class="region" id="caption-region"></span>
+  <button class="icon-btn" id="caption-reset" title="Back to the full coast" aria-label="Back to the full coast">&times;</button>
+</div>
+
+<button id="contact-btn">Next Stop: Contact &rarr;</button>
+
+<div class="scrim right" id="detail-scrim">
+  <div class="card" id="detail-card"></div>
+</div>
+
+<div class="scrim center" id="contact-scrim">
+  <div class="card" id="contact-card">
+    <button class="icon-btn" id="contact-close" style="position:absolute;top:16px;right:16px;" aria-label="Close">&times;</button>
+    <div class="kicker">Next Stop</div>
+    <h2 style="font:400 26px var(--font-heading);margin:8px 0 16px;">Contact</h2>
+    <div style="display:flex;gap:10px;flex-wrap:wrap;">
+      <a class="btn btn-primary" href="#">Resume</a>
+      <a class="btn btn-secondary" href="mailto:ltgriffin01@gmail.com">Email</a>
+      <a class="btn btn-secondary" href="#">LinkedIn</a>
+      <a class="btn btn-secondary" href="#">GitHub</a>
+    </div>
+  </div>
+</div>
+
+<script>
+const TAGS = {
+  backend:{label:'Backend',bg:'var(--color-accent-100)',fg:'var(--color-accent-800)'},
+  frontend:{label:'Frontend',bg:'var(--color-accent-2-100)',fg:'var(--color-accent-2-800)'},
+  cloud:{label:'Cloud & DevOps',bg:'rgba(201,154,62,.16)',fg:'#7a5c1f'},
+  data:{label:'Data & Automation',bg:'rgba(181,103,79,.16)',fg:'#7a3d2b'},
+  study:{label:'Coursework',bg:'var(--color-neutral-200)',fg:'var(--color-neutral-800)'}
+};
+
+/* Stations sit on real coordinates. kind: interchange | terminus | minor */
+const STOPS = [
+  { id:'bear', line:'intern', kind:'terminus', at:[33.0185,-80.1756], dir:'top',
+    name:'Bear Cognition', place:'Summerville, SC', role:'Software Engineer Intern', dates:'Jan 2023 – May 2023',
+    kicker:'Internship line · Northern terminus', fly:{center:[33.0185,-80.1756], zoom:14, label:'Summerville'},
+    tags:['cloud','backend'], highlights:[
+      'Led enterprise-wide cloud migration of 12 production services from GCP to AWS, cutting monthly infra costs 10%.',
+      'Migrated 5 relational SQL databases and refactored cloud functions to serverless AWS Lambda, improving response times 25%.'] },
+  { id:'hometown', line:'main', kind:'terminus', at:[32.9100,-80.1100], dir:'left',
+    name:'Hometown', place:'Upstate, South Carolina', role:'Where the line begins', dates:'Origin station',
+    kicker:'Career line · Western terminus', fly:{center:[34.8526,-82.3940], zoom:10, label:'Upstate South Carolina'},
+    tags:[], highlights:['Placeholder — tell me your hometown and I’ll name this stop properly and drop the pin on the real town.'] },
+  { id:'college', line:'main', kind:'interchange', at:[32.7845,-79.9375], dir:'left', off:[-26,30],
+    name:'College of Charleston', place:'Downtown Charleston, SC', role:'B.S. Computer Science', dates:'Aug 2019 – May 2023',
+    kicker:'Interchange · Career line & Internship line', fly:{center:[32.7845,-79.9375], zoom:15, label:'Downtown Charleston'},
+    tags:['study'], highlights:[
+      'The interchange: both internships branch off these four years, and the career line carries on from here.',
+      'Placeholder — confirm your major and add any honors, clubs, or capstone work you want listed here.'] },
+  { id:'mtp', line:'main', kind:'minor', at:[32.8130,-79.8720], dir:'right',
+    name:'Mount Pleasant', place:'Mount Pleasant, SC', role:'Waypoint', dates:'On the line',
+    kicker:'Career line · Waypoint', fly:{center:[32.8130,-79.8720], zoom:14, label:'Mount Pleasant'},
+    tags:[], highlights:[
+      'The career line crosses the Ravenel Bridge here, then follows Long Point Road north to the Wando crossing.',
+      'Placeholder — if you live here, or something belongs at this stop, tell me and I’ll promote it to a full station.'] },
+  { id:'booz', line:'main', kind:'terminus', at:[32.8580,-79.8990], dir:'top', current:true,
+    name:'Booz Allen Hamilton', place:'Daniel Island, SC', role:'Mid-Level Software Engineer', dates:'June 2023 – Present',
+    kicker:'Career line · Eastern terminus', fly:{center:[32.8580,-79.8990], zoom:15, label:'Daniel Island'},
+    tags:['frontend','backend','cloud','data'], highlights:[
+      'Engineered an AI-integrated web form (ChatGPT Gov) for claims processors — 24% faster queue time, 11% higher accuracy.',
+      'Built an event-driven Kafka pipeline processing 2,000 veteran claims/day, cutting pre-processing errors 15%.',
+      'Shipped Angular/TypeScript UIs serving 25,000 VA users; trained 50 developers on Ansible, cutting setup time from 20h to 6h.'] },
+  { id:'adaptive', line:'intern', kind:'terminus', at:[32.6500,-79.7800], dir:'right',
+    name:'Adaptive Biotechnologies', place:'Remote — Seattle, WA', role:'Software Engineer Intern', dates:'May 2022 – Aug 2022',
+    kicker:'Internship line · Offshore terminus', fly:{center:[47.6205,-122.3493], zoom:12, label:'Seattle, WA'},
+    tags:['data'], highlights:[
+      'Built Python automation scripts for company-wide KPI reporting pipelines.',
+      'Eliminated 8 hours/week of manual data entry for executive stakeholders.'] }
+];
+
+/* CAREER LINE — Hometown, down the Ashley River Road corridor, over the Ashley into
+   downtown, over the Ravenel Bridge to Mount Pleasant, then the Wando crossing to
+   Daniel Island. Water is crossed only where the real bridges are. */
+const CAREER = [
+  [32.9100,-80.1100],   // Hometown ★
+  [32.8620,-80.0740],   // Ashley River Road (west bank)
+  [32.8200,-80.0350],   // West Ashley
+  [32.7900,-79.9800],   // Savannah Highway
+  [32.7820,-79.9560],   // Ashley River bridge
+  [32.7845,-79.9375],   // College of Charleston ★
+  [32.7880,-79.9270],   // east side of the peninsula
+  [32.7955,-79.9080],   // Ravenel Bridge over the Cooper
+  [32.8000,-79.8930],   // Mount Pleasant landing
+  [32.8130,-79.8720],   // Mount Pleasant ★
+  [32.8320,-79.8620],   // Long Point Road
+  [32.8500,-79.8830],   // Wando River crossing
+  [32.8580,-79.8990]    // Booz Allen, Daniel Island ★
+];
+
+/* INTERNSHIP LINE — Summerville down the I-26 / rail corridor, along the neck of the
+   peninsula to the interchange, then out of the harbour into the Atlantic. */
+const INTERN = [
+  [33.0185,-80.1756],   // Bear Cognition, Summerville ★
+  [32.9880,-80.1330],   // Bacons Bridge
+  [32.9560,-80.0900],   // Ladson
+  [32.9200,-80.0520],   // Ashley Phosphate
+  [32.8880,-80.0130],   // North Charleston
+  [32.8640,-79.9800],   // Park Circle
+  [32.8280,-79.9600],   // upper peninsula
+  [32.8020,-79.9470],   // the neck
+  [32.7845,-79.9375],   // College of Charleston ★
+  [32.7720,-79.9330],   // the Battery
+  [32.7480,-79.9130],   // Charleston Harbour
+  [32.7180,-79.8760],   // the harbour mouth
+  [32.6820,-79.8250],   // the Atlantic
+  [32.6500,-79.7800]    // Adaptive Biotechnologies ★
+];
+
+const HOME_BOUNDS = L.latLngBounds([32.605,-80.250],[33.055,-79.700]);
+
+/* Cardinal spline through every control point — real subway-map curves that still land
+   exactly on each station coordinate. Low tension keeps the turns from overshooting. */
+function curve(pts, steps, tension){
+  steps = steps || 18; tension = tension === undefined ? 0.32 : tension;
+  if (pts.length < 3) return pts.slice();
+  const P = i => pts[Math.max(0, Math.min(pts.length - 1, i))];
+  const out = [];
+  for (let i = 0; i < pts.length - 1; i++){
+    const p0 = P(i-1), p1 = P(i), p2 = P(i+1), p3 = P(i+2);
+    for (let s = 0; s < steps; s++){
+      const t = s / steps, t2 = t*t, t3 = t2*t;
+      const h00 = 2*t3 - 3*t2 + 1, h10 = t3 - 2*t2 + t, h01 = -2*t3 + 3*t2, h11 = t3 - t2;
+      out.push([
+        h00*p1[0] + h10*tension*(p2[0]-p0[0]) + h01*p2[0] + h11*tension*(p3[0]-p1[0]),
+        h00*p1[1] + h10*tension*(p2[1]-p0[1]) + h01*p2[1] + h11*tension*(p3[1]-p1[1])
+      ]);
+    }
+  }
+  out.push(pts[pts.length - 1]);
+  return out;
+}
+const CAREER_C = curve(CAREER);
+const INTERN_C = curve(INTERN);
+
+const map = L.map('map',{ zoomControl:false, zoomSnap:.25, attributionControl:true, minZoom:8, maxZoom:17 });
+/* Pale, label-free basemap so the diagram reads as a transit map, not a street atlas */
+L.tileLayer('https://{s}.basemaps.cartocdn.com/light_nolabels/{z}/{x}/{y}{r}.png',{
+  subdomains:'abcd', attribution:'© OpenStreetMap contributors © CARTO', maxZoom:19, detectRetina:true
+}).addTo(map);
+/* Street and place names only appear once you zoom into a single stop, for context */
+const labelsLayer = L.tileLayer('https://{s}.basemaps.cartocdn.com/light_only_labels/{z}/{x}/{y}{r}.png',{
+  subdomains:'abcd', maxZoom:19, detectRetina:true
+});
+L.control.zoom({ position:'bottomright' }).addTo(map);
+map.fitBounds(HOME_BOUNDS,{ padding:[24,24] });
+
+const css = n => getComputedStyle(document.documentElement).getPropertyValue(n).trim();
+const accent = css('--color-accent') || '#c67139';
+const sage = css('--color-accent-2') || '#7a8a5e';
+const cream = css('--color-neutral-100') || '#fdf6e9';
+const ink = css('--color-neutral-800') || '#3a3532';
+
+const lines = L.layerGroup().addTo(map);
+L.polyline(INTERN_C,{ color:cream, weight:14, opacity:1, lineCap:'round', lineJoin:'round' }).addTo(lines);
+L.polyline(CAREER_C,{ color:cream, weight:15, opacity:1, lineCap:'round', lineJoin:'round' }).addTo(lines);
+L.polyline(INTERN_C,{ color:sage, weight:7, opacity:1, lineCap:'round', lineJoin:'round' }).addTo(lines);
+L.polyline(CAREER_C,{ color:accent, weight:8, opacity:1, lineCap:'round', lineJoin:'round' }).addTo(lines);
+
+const markers = {};
+STOPS.forEach(s => {
+  const ring = s.kind === 'interchange' ? ink : (s.line === 'intern' ? sage : accent);
+  const size = s.kind === 'interchange' ? 32 : s.kind === 'minor' ? 15 : 27;
+  const bw = s.kind === 'interchange' ? 8 : s.kind === 'minor' ? 4 : 7;
+  const html = `<div class="stop${s.current ? ' current' : ''}" role="button" tabindex="0" aria-label="${s.name}" style="width:${size}px;height:${size}px;border:${bw}px solid ${ring};"></div>`;
+  const marker = L.marker(s.at,{
+    icon: L.divIcon({ html, className:'', iconSize:[size,size], iconAnchor:[size/2,size/2] }),
+    keyboard:true, riseOnHover:true, zIndexOffset: s.current ? 500 : (s.kind === 'minor' ? 200 : 300)
+  }).addTo(map);
+  const body = s.kind === 'minor'
+    ? `<div class="sl-name">${s.name}</div>`
+    : `<div class="sl-name">${s.name}</div><div class="sl-dates">${s.dates}</div><div class="sl-place">${s.place}</div>`;
+  const auto = s.dir === 'left' ? [-size/2-6,0] : s.dir === 'right' ? [size/2+6,0]
+    : s.dir === 'top' ? [0,-size/2-6] : [0,size/2+6];
+  marker.bindTooltip(body, {
+    permanent:true, direction:s.dir, opacity:1,
+    className:`stop-label ${s.line}${s.kind === 'minor' ? ' minor' : ''}`,
+    offset: s.off || auto
+  });
+  marker.on('click', () => select(s.id));
+  marker.on('keypress', e => { if (e.originalEvent.key === 'Enter' || e.originalEvent.key === ' ') select(s.id); });
+  markers[s.id] = marker;
+});
+
+const detailScrim = document.getElementById('detail-scrim');
+const detailCard = document.getElementById('detail-card');
+const contactScrim = document.getElementById('contact-scrim');
+const caption = document.getElementById('caption');
+const captionRegion = document.getElementById('caption-region');
+let activeId = null;
+
+function select(id){
+  const s = STOPS.find(x => x.id === id);
+  if (!s) return;
+  activeId = id;
+  // isolate the stop: drop the diagram, bring in place names for local context
+  map.removeLayer(lines);
+  STOPS.forEach(o => { if (o.id !== id) map.removeLayer(markers[o.id]); });
+  if (!map.hasLayer(labelsLayer)) labelsLayer.addTo(map);
+  map.flyTo(s.fly.center, s.fly.zoom, { duration:1.1 });
+  captionRegion.textContent = s.fly.label;
+  caption.style.display = 'flex';
+  detailCard.innerHTML = `
+    <button class="icon-btn" data-close style="position:absolute;top:16px;right:16px;" aria-label="Close">&times;</button>
+    <div class="kicker">${s.kicker}</div>
+    <div style="display:flex;align-items:flex-start;gap:10px;row-gap:6px;flex-wrap:wrap;margin:8px 0 0;padding-right:26px;">
+      <h3>${s.name}</h3>${s.current ? '<span class="badge">You are here</span>' : ''}
+    </div>
+    <div class="dates">${s.dates}</div>
+    <div class="meta">${s.role} &middot; ${s.place}</div>
+    ${s.tags.length ? `<div class="tagrow">${s.tags.map(t => `<span style="background:${TAGS[t].bg};color:${TAGS[t].fg};">${TAGS[t].label}</span>`).join('')}</div>` : ''}
+    <ul>${s.highlights.map(h => `<li>${h}</li>`).join('')}</ul>`;
+  detailScrim.style.display = 'flex';
+}
+
+function resetView(){
+  activeId = null;
+  detailScrim.style.display = 'none';
+  caption.style.display = 'none';
+  if (map.hasLayer(labelsLayer)) map.removeLayer(labelsLayer);
+  STOPS.forEach(o => { if (!map.hasLayer(markers[o.id])) markers[o.id].addTo(map); });
+  if (!map.hasLayer(lines)) lines.addTo(map);
+  map.flyToBounds(HOME_BOUNDS, { padding:[24,24], duration:1.1 });
+}
+
+detailScrim.addEventListener('click', e => { if (e.target === detailScrim || e.target.closest('[data-close]')) resetView(); });
+document.getElementById('caption-reset').addEventListener('click', resetView);
+document.getElementById('contact-btn').addEventListener('click', () => { contactScrim.style.display = 'flex'; });
+document.getElementById('contact-close').addEventListener('click', () => { contactScrim.style.display = 'none'; });
+contactScrim.addEventListener('click', e => { if (e.target === contactScrim) contactScrim.style.display = 'none'; });
+document.addEventListener('keydown', e => {
+  if (e.key !== 'Escape') return;
+  if (contactScrim.style.display === 'flex') contactScrim.style.display = 'none';
+  else if (activeId) resetView();
+});
+</script>
+</body>
+</html>

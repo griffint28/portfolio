@@ -1,0 +1,231 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+  <link rel="stylesheet" href="_ds/nocturne-9703dd63-a6ce-4d7a-bbc4-b10f9e896189/styles.css">
+  <script src="_ds/nocturne-9703dd63-a6ce-4d7a-bbc4-b10f9e896189/_ds_bundle.js"></script>
+  <style>
+    body{margin:0;background:var(--color-bg);color:var(--color-text);font-family:var(--font-body);}
+    a{color:var(--color-accent-300);text-decoration:none;}
+    a:hover{color:var(--color-accent-200);text-decoration:underline;}
+    @keyframes pulse-ring{0%{transform:scale(0.9);opacity:0.9;}70%{transform:scale(2.1);opacity:0;}100%{transform:scale(2.1);opacity:0;}}
+    @keyframes pulse-dot{0%,100%{transform:scale(1);}50%{transform:scale(1.15);}}
+    .station-row:hover .station-card{border-color:var(--color-accent-500);}
+  </style>
+</helmet>
+
+<div style="max-width:920px;margin:0 auto;padding:64px 24px 40px;">
+
+  <!-- HERO / NAMEPLATE -->
+  <div style="border:1px solid var(--color-neutral-700);border-radius:var(--radius-lg);padding:28px 32px;background:linear-gradient(180deg,var(--color-neutral-800),var(--color-neutral-900));box-shadow:var(--shadow-md);position:relative;overflow:hidden;">
+    <div style="position:absolute;top:0;left:0;right:0;height:6px;background:{{ lineColor }};"></div>
+    <div style="display:flex;align-items:center;gap:10px;margin-bottom:10px;">
+      <div style="width:34px;height:34px;border-radius:999px;background:{{ lineColor }};display:flex;align-items:center;justify-content:center;font-weight:600;font-size:14px;color:#161826;">CS</div>
+      <div style="font:600 11px/1 var(--font-body);letter-spacing:.14em;text-transform:uppercase;color:var(--color-neutral-300);">Career System &middot; Line 1</div>
+    </div>
+    <h1 style="font:500 42px/1.1 var(--font-heading);margin:0 0 6px;">{{ name }}</h1>
+    <div style="font:500 17px/1.3 var(--font-body);color:var(--color-accent-200);margin-bottom:10px;">{{ title }}</div>
+    <p style="font:400 15px/1.5 var(--font-body);color:var(--color-neutral-300);max-width:560px;margin:0;">{{ tagline }}</p>
+  </div>
+
+  <!-- LEGEND -->
+  <div style="margin:28px 0 8px;border:1px solid var(--color-neutral-800);border-radius:var(--radius-md);padding:16px 18px;background:var(--color-neutral-900);">
+    <div style="font:600 11px/1 var(--font-body);letter-spacing:.1em;text-transform:uppercase;color:var(--color-neutral-400);margin-bottom:12px;">System Legend</div>
+    <div style="display:flex;flex-wrap:wrap;gap:10px;margin-bottom:12px;">
+      <sc-for list="{{ legend }}" as="leg" hint-placeholder-count="4">
+        <div style="display:flex;align-items:center;gap:7px;padding:5px 12px 5px 8px;border-radius:999px;background:var(--color-neutral-800);border:1px solid var(--color-neutral-700);">
+          <span style="width:10px;height:10px;border-radius:999px;background:{{ leg.color }};display:inline-block;"></span>
+          <span style="font:500 12.5px var(--font-body);color:var(--color-neutral-200);">{{ leg.label }}</span>
+        </div>
+      </sc-for>
+    </div>
+    <div style="display:flex;flex-wrap:wrap;gap:20px;font:400 12px var(--font-body);color:var(--color-neutral-400);">
+      <div style="display:flex;align-items:center;gap:7px;"><span style="width:14px;height:14px;border-radius:999px;background:var(--color-neutral-600);display:inline-block;"></span>Station</div>
+      <div style="display:flex;align-items:center;gap:7px;"><span style="width:18px;height:18px;border-radius:999px;background:conic-gradient(#9184d9,#5fb8a3,#d9a15f,#d97a94);display:inline-block;"></span>Interchange</div>
+      <div style="display:flex;align-items:center;gap:7px;"><span style="width:12px;height:12px;border-radius:999px;background:var(--color-accent);box-shadow:0 0 0 3px var(--color-accent-800);display:inline-block;"></span>You Are Here</div>
+    </div>
+  </div>
+
+  <!-- MAIN LINE -->
+  <div style="position:relative;margin-top:24px;">
+    <div style="position:absolute;left:29px;top:6px;bottom:6px;width:6px;background:{{ lineColor }};border-radius:3px;z-index:0;"></div>
+    <sc-for list="{{ stations }}" as="st" hint-placeholder-count="3">
+      <div class="station-row" style="position:relative;z-index:1;display:grid;grid-template-columns:60px 1fr;column-gap:16px;margin-bottom:{{ st.marginBottom }};">
+        <div style="display:flex;align-items:flex-start;justify-content:center;padding-top:6px;">
+          <div style="position:relative;width:{{ st.circleSize }}px;height:{{ st.circleSize }}px;">
+            <sc-if value="{{ st.current }}" hint-placeholder-val="{{ false }}">
+              <span style="position:absolute;inset:0;border-radius:999px;background:var(--color-accent);animation:pulse-ring 2s cubic-bezier(0.2,0.6,0.4,1) infinite;"></span>
+            </sc-if>
+            <div style="position:absolute;inset:0;border-radius:999px;background:{{ st.ringBg }};padding:{{ st.ringPad }}px;box-shadow:var(--shadow-sm);animation:{{ st.dotAnim }};">
+              <div style="width:100%;height:100%;border-radius:999px;background:var(--color-neutral-900);display:flex;align-items:center;justify-content:center;">
+                <div style="width:{{ st.innerDot }}px;height:{{ st.innerDot }}px;border-radius:999px;background:{{ st.primaryColor }};"></div>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="station-card" onClick="{{ st.toggle }}" style="cursor:pointer;border:1px solid var(--color-neutral-800);border-radius:var(--radius-md);background:var(--color-neutral-900);padding:16px 18px;transition:border-color .15s;">
+          <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:12px;">
+            <div>
+              <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;">
+                <span style="font:500 16px var(--font-heading);">{{ st.company }}</span>
+                <sc-if value="{{ st.interchange }}" hint-placeholder-val="{{ false }}">
+                  <span style="font:600 9.5px var(--font-body);letter-spacing:.08em;text-transform:uppercase;color:var(--color-accent-200);border:1px solid var(--color-accent-700);border-radius:999px;padding:2px 8px;">Interchange</span>
+                </sc-if>
+                <sc-if value="{{ st.current }}" hint-placeholder-val="{{ false }}">
+                  <span style="font:600 9.5px var(--font-body);letter-spacing:.08em;text-transform:uppercase;color:#161826;background:var(--color-accent);border-radius:999px;padding:2px 8px;">You Are Here</span>
+                </sc-if>
+              </div>
+              <div style="font:400 13.5px var(--font-body);color:var(--color-neutral-300);margin-top:2px;">{{ st.role }} &middot; {{ st.dates }}</div>
+            </div>
+            <div style="font:400 18px var(--font-body);color:var(--color-neutral-500);transform:{{ st.chevronRotate }};transition:transform .15s;flex-shrink:0;">&#8250;</div>
+          </div>
+          <div style="display:flex;gap:6px;margin-top:10px;flex-wrap:wrap;">
+            <sc-for list="{{ st.tags }}" as="tg" hint-placeholder-count="2">
+              <span style="font:500 11px var(--font-body);padding:3px 10px;border-radius:999px;background:{{ tg.bg }};color:{{ tg.fg }};">{{ tg.label }}</span>
+            </sc-for>
+          </div>
+          <sc-if value="{{ st.expanded }}" hint-placeholder-val="{{ false }}">
+            <ul style="margin:14px 0 0;padding-left:18px;color:var(--color-neutral-300);font:400 13.5px/1.55 var(--font-body);">
+              <sc-for list="{{ st.highlights }}" as="hl" hint-placeholder-count="2">
+                <li style="margin-bottom:6px;">{{ hl }}</li>
+              </sc-for>
+            </ul>
+          </sc-if>
+        </div>
+      </div>
+    </sc-for>
+  </div>
+
+  <!-- SIDE ROUTES -->
+  <div style="margin-top:8px;padding-top:20px;">
+    <div style="display:flex;align-items:center;gap:10px;margin-bottom:4px;">
+      <div style="width:14px;height:2px;background:var(--color-neutral-600);"></div>
+      <div style="font:600 11px var(--font-body);letter-spacing:.1em;text-transform:uppercase;color:var(--color-neutral-400);">Transfer at {{ transferStation }} &middot; Side Routes / Local Transfers</div>
+    </div>
+    <div style="position:relative;margin-top:18px;padding-left:0;">
+      <div style="position:absolute;left:0;right:0;top:11px;height:2px;background:repeating-linear-gradient(90deg,var(--color-neutral-600) 0 8px,transparent 8px 14px);z-index:0;"></div>
+      <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:16px;position:relative;z-index:1;">
+        <sc-for list="{{ projects }}" as="pr" hint-placeholder-count="3">
+          <div style="display:flex;flex-direction:column;gap:10px;">
+            <div style="width:14px;height:14px;border-radius:999px;background:var(--color-neutral-500);border:2px solid var(--color-bg);margin-left:0;"></div>
+            <div style="border:1px solid var(--color-neutral-800);border-radius:var(--radius-md);background:var(--color-neutral-900);padding:14px 15px;">
+              <div style="font:500 14px var(--font-heading);margin-bottom:4px;">{{ pr.name }}</div>
+              <div style="font:400 12.5px/1.5 var(--font-body);color:var(--color-neutral-400);">{{ pr.desc }}</div>
+            </div>
+          </div>
+        </sc-for>
+      </div>
+    </div>
+  </div>
+
+  <!-- TERMINUS / CONTACT -->
+  <div style="margin-top:44px;border-radius:999px 999px 24px 24px;border:1px solid var(--color-accent-700);background:linear-gradient(180deg,var(--color-neutral-900),var(--color-neutral-950,var(--color-neutral-900)));padding:30px 34px;position:relative;">
+    <div style="position:absolute;left:32px;top:-9px;width:18px;height:18px;border-radius:999px;background:var(--color-accent);box-shadow:0 0 0 4px var(--color-bg);"></div>
+    <div style="font:600 11px var(--font-body);letter-spacing:.12em;text-transform:uppercase;color:var(--color-accent-200);margin-bottom:6px;">Next Stop</div>
+    <h2 style="font:500 26px var(--font-heading);margin:0 0 16px;">Contact</h2>
+    <div style="display:flex;gap:10px;flex-wrap:wrap;">
+      <a class="btn btn-primary" href="{{ resumeUrl }}">Resume</a>
+      <a class="btn btn-secondary" href="{{ emailUrl }}">Email</a>
+      <a class="btn btn-secondary" href="{{ linkedinUrl }}">LinkedIn</a>
+      <a class="btn btn-secondary" href="{{ githubUrl }}">GitHub</a>
+    </div>
+  </div>
+
+</div>
+
+</x-dc>
+<script type="text/x-dc" data-dc-script>
+const LINE_COLOR = '#9184d9';
+const TAG_COLORS = {
+  backend: { bg: 'rgba(145,132,217,0.16)', fg: '#c3bbf0', dot: '#9184d9', label: 'Backend' },
+  frontend: { bg: 'rgba(95,184,163,0.16)', fg: '#8fd6c4', dot: '#5fb8a3', label: 'Frontend' },
+  cloud: { bg: 'rgba(217,161,95,0.16)', fg: '#e8c393', dot: '#d9a15f', label: 'Cloud & DevOps' },
+  data: { bg: 'rgba(217,122,148,0.16)', fg: '#eba7bb', dot: '#d97a94', label: 'Data & Automation' },
+};
+
+const RAW_STATIONS = [
+  {
+    id: 'adaptive', company: 'Adaptive Biotechnologies', role: 'Software Engineer Intern', dates: 'May 2022 \u2013 Aug 2022',
+    interchange: false, current: false, tagKeys: ['data'],
+    highlights: [
+      'Built Python automation scripts for company-wide KPI reporting pipelines.',
+      'Eliminated 8 hours/week of manual data entry for executive stakeholders.',
+    ],
+  },
+  {
+    id: 'bear', company: 'Bear Cognition', role: 'Software Engineer Intern', dates: 'Jan 2023 \u2013 May 2023',
+    interchange: true, current: false, tagKeys: ['cloud', 'backend'],
+    highlights: [
+      'Led enterprise-wide cloud migration of 12 production services from GCP to AWS, cutting monthly infra costs 10%.',
+      'Migrated 5 relational SQL databases and refactored cloud functions to serverless AWS Lambda, improving response times 25%.',
+    ],
+  },
+  {
+    id: 'booz', company: 'Booz Allen Hamilton', role: 'Mid-Level Software Engineer', dates: 'June 2023 \u2013 Present',
+    interchange: true, current: true, tagKeys: ['frontend', 'backend', 'cloud', 'data'],
+    highlights: [
+      'Engineered an AI-integrated web form (ChatGPT Gov) for claims processors \u2014 24% faster queue time, 11% higher accuracy.',
+      'Built an event-driven Kafka pipeline processing 2,000 veteran claims/day, cutting pre-processing errors 15%.',
+      'Shipped Angular/TypeScript UIs serving 25,000 VA users; trained 50 developers on Ansible, cutting setup time from 20h to 6h.',
+    ],
+  },
+];
+
+const PROJECTS = [
+  { name: 'Side Project One', desc: 'Placeholder \u2014 swap in your project name and a one-line description.' },
+  { name: 'Side Project Two', desc: 'Placeholder \u2014 swap in your project name and a one-line description.' },
+  { name: 'Side Project Three', desc: 'Placeholder \u2014 swap in your project name and a one-line description.' },
+];
+
+class Component extends DCLogic {
+  state = { expanded: { booz: true } };
+
+  renderVals() {
+    const expanded = this.state.expanded;
+    const stations = RAW_STATIONS.map((s, i) => {
+      const isExpanded = !!expanded[s.id];
+      const ringColors = s.tagKeys.map(k => TAG_COLORS[k].dot);
+      const ringBg = s.interchange
+        ? `conic-gradient(${ringColors.join(',')})`
+        : LINE_COLOR;
+      return {
+        ...s,
+        expanded: isExpanded,
+        chevronRotate: isExpanded ? 'rotate(90deg)' : 'rotate(0deg)',
+        marginBottom: i === RAW_STATIONS.length - 1 ? '0px' : '22px',
+        circleSize: s.interchange ? 40 : 32,
+        ringPad: s.interchange ? 4 : 3,
+        innerDot: s.interchange ? 10 : 8,
+        primaryColor: s.interchange ? ringColors[0] : LINE_COLOR,
+        ringBg,
+        dotAnim: s.current ? 'pulse-dot 2s ease-in-out infinite' : 'none',
+        tags: s.tagKeys.map(k => ({ label: TAG_COLORS[k].label, bg: TAG_COLORS[k].bg, fg: TAG_COLORS[k].fg })),
+        toggle: () => this.setState(st => ({ expanded: { ...st.expanded, [s.id]: !st.expanded[s.id] } })),
+      };
+    });
+
+    return {
+      name: 'Thomas Griffin',
+      title: 'Software Engineer',
+      tagline: 'Full-stack routes, cloud connections \u2014 running on schedule since 2022.',
+      lineColor: LINE_COLOR,
+      legend: Object.values(TAG_COLORS).map(t => ({ label: t.label, color: t.dot })),
+      stations,
+      transferStation: 'Booz Allen Hamilton',
+      projects: PROJECTS,
+      resumeUrl: '#',
+      emailUrl: 'mailto:ltgriffin01@gmail.com',
+      linkedinUrl: '#',
+      githubUrl: '#',
+    };
+  }
+}
+</script>
+</body>
+</html>

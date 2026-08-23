@@ -1,0 +1,472 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+  <link rel="stylesheet" href="_ds/organic-745a8e6d-2071-4912-904e-4bff3ece9f35/styles.css">
+  <script src="_ds/organic-745a8e6d-2071-4912-904e-4bff3ece9f35/_ds_bundle.js"></script>
+  <style>
+    html,body{margin:0;height:100%;overflow:hidden;background:var(--color-bg);color:var(--color-text);font-family:var(--font-body);}
+    a{color:var(--color-accent-700);text-decoration:none;}
+    a:hover{color:var(--color-accent-900);text-decoration:underline;}
+    @keyframes pulse-ring{0%{transform:scale(0.85);opacity:0.85;}70%{transform:scale(2.3);opacity:0;}100%{transform:scale(2.3);opacity:0;}}
+    @keyframes pulse-dot{0%,100%{transform:scale(1);}50%{transform:scale(1.18);}}
+    @keyframes modal-in{from{opacity:0;transform:translateY(8px) scale(0.98);}to{opacity:1;transform:translateY(0) scale(1);}}
+    .stop-btn{border:none;background:none;cursor:pointer;padding:0;}
+    .stop-btn:focus-visible{outline:2px solid var(--color-accent);outline-offset:3px;border-radius:999px;}
+    .icon-btn{border:none;background:var(--color-neutral-200);cursor:pointer;width:30px;height:30px;border-radius:999px;display:flex;align-items:center;justify-content:center;font-size:15px;color:var(--color-neutral-700);}
+    .icon-btn:hover{background:var(--color-neutral-300);}
+  </style>
+</helmet>
+
+<div style="width:100vw;height:100vh;position:relative;overflow:hidden;background:var(--color-bg);">
+
+  <!-- CITY + LINES -->
+  <svg viewBox="0 0 1300 660" width="100%" height="100%" preserveAspectRatio="none" style="position:absolute;inset:0;display:block;">
+    <!-- SKY ACCENTS -->
+    <circle cx="1220" cy="55" r="34" fill="var(--color-accent-200)" opacity="0.55"></circle>
+    <g opacity="0.5" fill="var(--color-neutral-100)" stroke="var(--color-neutral-300)" stroke-width="1">
+      <ellipse cx="240" cy="45" rx="34" ry="13"></ellipse>
+      <ellipse cx="268" cy="38" rx="24" ry="11"></ellipse>
+    </g>
+
+    <!-- RIVER -->
+    <path d="M -20 110 Q 260 55, 540 145 T 1000 105 T 1340 175" fill="none" stroke="var(--color-accent-2-200)" stroke-width="42" stroke-linecap="round" opacity="0.85"></path>
+    <path d="M -20 110 Q 260 55, 540 145 T 1000 105 T 1340 175" fill="none" stroke="var(--color-accent-2-300)" stroke-width="3" stroke-dasharray="1 12" stroke-linecap="round" opacity="0.9"></path>
+    <!-- BRIDGE where main line crosses the river -->
+    <rect x="560" y="130" width="50" height="18" rx="4" fill="var(--color-neutral-400)" opacity="0.9"></rect>
+    <line x1="571" y1="130" x2="571" y2="148" stroke="var(--color-neutral-600)" stroke-width="2.5" opacity="0.8"></line>
+    <line x1="599" y1="130" x2="599" y2="148" stroke="var(--color-neutral-600)" stroke-width="2.5" opacity="0.8"></line>
+
+    <!-- PARK (Old Town, near college) -->
+    <ellipse cx="140" cy="590" rx="140" ry="82" fill="var(--color-accent-2-100)" opacity="0.85"></ellipse>
+    <g opacity="0.9" fill="var(--color-accent-2-400)">
+      <circle cx="80" cy="570" r="19"></circle>
+      <circle cx="122" cy="602" r="24"></circle>
+      <circle cx="182" cy="575" r="17"></circle>
+      <circle cx="215" cy="608" r="21"></circle>
+    </g>
+    <text x="140" y="596" text-anchor="middle" font-family="var(--font-heading)" font-size="15" fill="var(--color-accent-2-900)" opacity="0.55">Old Town Park</text>
+
+    <!-- SECOND PARK (Riverside Green, near projects) -->
+    <ellipse cx="1160" cy="580" rx="155" ry="88" fill="var(--color-accent-2-100)" opacity="0.8"></ellipse>
+    <g opacity="0.85" fill="var(--color-accent-2-400)">
+      <circle cx="1085" cy="560" r="18"></circle>
+      <circle cx="1130" cy="600" r="22"></circle>
+      <circle cx="1210" cy="565" r="20"></circle>
+      <circle cx="1250" cy="605" r="17"></circle>
+    </g>
+    <text x="1080" y="505" text-anchor="middle" font-family="var(--font-heading)" font-size="15" fill="var(--color-accent-2-900)" opacity="0.55">Riverside Green</text>
+
+    <!-- STREETS -->
+    <g opacity="0.5" fill="none" stroke="var(--color-neutral-500)" stroke-width="3.5">
+      <path d="M 10 200 Q 200 260, 360 220 T 640 260"></path>
+      <path d="M 700 30 Q 770 110, 750 230 T 810 480"></path>
+      <path d="M 930 50 Q 1030 140, 1080 250 T 1180 480"></path>
+      <path d="M 40 260 Q 60 380, 40 480"></path>
+    </g>
+
+    <!-- SKYLINE: Campus Row (college) -->
+    <g opacity="0.95">
+      <rect x="20" y="60" width="70" height="120" rx="6" fill="var(--color-neutral-300)"></rect>
+      <polygon points="20,60 55,28 90,60" fill="var(--color-accent-300)"></polygon>
+      <rect x="34" y="78" width="13" height="14" fill="var(--color-neutral-100)"></rect>
+      <rect x="63" y="78" width="13" height="14" fill="var(--color-neutral-100)"></rect>
+      <rect x="34" y="104" width="13" height="14" fill="var(--color-neutral-100)"></rect>
+      <rect x="63" y="104" width="13" height="14" fill="var(--color-neutral-100)"></rect>
+      <rect x="34" y="130" width="13" height="14" fill="var(--color-neutral-100)"></rect>
+      <rect x="63" y="130" width="13" height="14" fill="var(--color-neutral-100)"></rect>
+      <rect x="105" y="110" width="50" height="70" rx="6" fill="var(--color-neutral-300)"></rect>
+      <rect x="115" y="122" width="12" height="12" fill="var(--color-neutral-100)"></rect>
+      <rect x="133" y="122" width="12" height="12" fill="var(--color-neutral-100)"></rect>
+      <!-- clocktower landmark -->
+      <rect x="170" y="50" width="26" height="110" rx="4" fill="var(--color-neutral-400)"></rect>
+      <polygon points="170,50 183,26 196,50" fill="var(--color-accent-400)"></polygon>
+      <circle cx="183" cy="70" r="9" fill="var(--color-neutral-100)" stroke="var(--color-neutral-600)" stroke-width="1.5"></circle>
+    </g>
+
+    <!-- SKYLINE: Cloud District (Bear) -->
+    <g opacity="0.95">
+      <rect x="520" y="20" width="60" height="160" rx="8" fill="var(--color-neutral-300)"></rect>
+      <rect x="533" y="38" width="11" height="15" fill="var(--color-neutral-100)"></rect>
+      <rect x="556" y="38" width="11" height="15" fill="var(--color-neutral-100)"></rect>
+      <rect x="533" y="66" width="11" height="15" fill="var(--color-neutral-100)"></rect>
+      <rect x="556" y="66" width="11" height="15" fill="var(--color-neutral-100)"></rect>
+      <rect x="533" y="94" width="11" height="15" fill="var(--color-neutral-100)"></rect>
+      <rect x="556" y="94" width="11" height="15" fill="var(--color-neutral-100)"></rect>
+      <rect x="670" y="6" width="76" height="70" rx="10" fill="var(--color-neutral-300)"></rect>
+      <circle cx="708" cy="6" r="12" fill="var(--color-accent-2-300)"></circle>
+      <rect x="640" y="120" width="46" height="60" rx="8" fill="var(--color-neutral-300)"></rect>
+    </g>
+
+    <!-- SKYLINE: Downtown (Booz) -->
+    <g opacity="0.95">
+      <rect x="970" y="40" width="64" height="160" rx="8" fill="var(--color-neutral-300)"></rect>
+      <rect x="1055" y="70" width="50" height="130" rx="8" fill="var(--color-neutral-300)"></rect>
+      <rect x="1120" y="16" width="42" height="184" rx="8" fill="var(--color-neutral-400)"></rect>
+      <rect x="986" y="60" width="11" height="13" fill="var(--color-neutral-100)"></rect>
+      <rect x="1010" y="60" width="11" height="13" fill="var(--color-neutral-100)"></rect>
+      <rect x="986" y="90" width="11" height="13" fill="var(--color-neutral-100)"></rect>
+      <rect x="1010" y="90" width="11" height="13" fill="var(--color-neutral-100)"></rect>
+      <rect x="986" y="120" width="11" height="13" fill="var(--color-neutral-100)"></rect>
+      <rect x="1010" y="120" width="11" height="13" fill="var(--color-neutral-100)"></rect>
+      <rect x="1133" y="40" width="9" height="13" fill="var(--color-neutral-200)"></rect>
+      <rect x="1149" y="40" width="9" height="13" fill="var(--color-neutral-200)"></rect>
+      <rect x="1133" y="68" width="9" height="13" fill="var(--color-neutral-200)"></rect>
+      <rect x="1149" y="68" width="9" height="13" fill="var(--color-neutral-200)"></rect>
+    </g>
+
+    <!-- SUBURB CLUSTER (bottom, near projects) -->
+    <g opacity="0.9">
+      <rect x="880" y="500" width="72" height="60" rx="8" fill="var(--color-neutral-300)"></rect>
+      <polygon points="880,500 916,474 952,500" fill="var(--color-accent-2-300)"></polygon>
+      <rect x="700" y="500" width="70" height="90" rx="8" fill="var(--color-neutral-300)"></rect>
+      <polygon points="700,500 735,470 770,500" fill="var(--color-accent-300)"></polygon>
+      <rect x="1230" y="480" width="90" height="80" rx="8" fill="var(--color-neutral-300)"></rect>
+    </g>
+
+    <!-- scattered trees along streets -->
+    <g opacity="0.8" fill="var(--color-accent-2-400)">
+      <circle cx="330" cy="235" r="9"></circle>
+      <circle cx="470" cy="230" r="8"></circle>
+      <circle cx="790" cy="470" r="9"></circle>
+      <circle cx="1000" cy="220" r="8"></circle>
+    </g>
+    <polyline points="{{ mainLinePoints }}" fill="none" stroke="{{ lineColor }}" stroke-width="9" stroke-linecap="round" stroke-linejoin="round"></polyline>
+    <line x1="{{ endX }}" y1="{{ endY }}" x2="{{ endArrowX }}" y2="{{ endY }}" stroke="{{ lineColor }}" stroke-width="9" stroke-linecap="round" stroke-dasharray="2 14"></line>
+    <polyline points="{{ branchPoints }}" fill="none" stroke="var(--color-accent-2)" stroke-width="6" stroke-linecap="round" stroke-linejoin="round" stroke-dasharray="1 13"></polyline>
+    <polyline points="{{ internBranchPoints }}" fill="none" stroke="var(--color-accent-700)" stroke-width="6" stroke-linecap="round" stroke-linejoin="round" stroke-dasharray="1 13"></polyline>
+  </svg>
+
+  <!-- HERO / NAMEPLATE overlay -->
+  <div style="position:absolute;top:24px;left:24px;z-index:5;max-width:320px;border:1px solid var(--color-neutral-300);border-radius:var(--radius-lg);padding:16px 18px;background:var(--color-neutral-100);box-shadow:var(--shadow-md);">
+    <div style="position:absolute;top:0;left:0;right:0;height:5px;background:{{ lineColor }};border-radius:var(--radius-lg) var(--radius-lg) 0 0;"></div>
+    <div style="font:600 9.5px/1 var(--font-body);letter-spacing:.14em;text-transform:uppercase;color:var(--color-accent-700);margin-bottom:7px;">Career Transit Authority &middot; Line 1</div>
+    <h1 style="font:400 27px/1.1 var(--font-heading);margin:0 0 5px;">{{ name }}</h1>
+    <div style="font:600 13px/1.3 var(--font-body);color:var(--color-accent-700);margin-bottom:6px;">{{ title }}</div>
+    <p style="font:400 12px/1.45 var(--font-body);color:var(--color-neutral-700);margin:0;">{{ tagline }}</p>
+  </div>
+
+  <!-- LEGEND overlay -->
+  <div style="position:absolute;top:24px;right:24px;z-index:5;border:1px solid var(--color-neutral-300);border-radius:var(--radius-md);padding:12px 15px;background:var(--color-neutral-100);box-shadow:var(--shadow-sm);">
+    <div style="font:600 9.5px/1 var(--font-body);letter-spacing:.1em;text-transform:uppercase;color:var(--color-neutral-600);margin-bottom:9px;">Line Colors</div>
+    <div style="display:flex;flex-direction:column;gap:7px;margin-bottom:10px;">
+      <sc-for list="{{ legend }}" as="leg" hint-placeholder-count="4">
+        <div style="display:flex;align-items:center;gap:7px;">
+          <span style="width:10px;height:10px;border-radius:999px;background:{{ leg.color }};display:inline-block;flex-shrink:0;"></span>
+          <span style="font:500 12px var(--font-body);color:var(--color-neutral-800);white-space:nowrap;">{{ leg.label }}</span>
+        </div>
+      </sc-for>
+    </div>
+    <div style="border-top:1px solid var(--color-neutral-300);margin:0 0 9px;"></div>
+    <div style="display:flex;flex-direction:column;gap:7px;font:400 12px var(--font-body);color:var(--color-neutral-800);">
+      <div style="display:flex;align-items:center;gap:7px;"><span style="width:11px;height:11px;border-radius:999px;background:{{ lineColor }};display:inline-block;flex-shrink:0;"></span>Station</div>
+      <div style="display:flex;align-items:center;gap:7px;"><span style="width:15px;height:15px;border-radius:999px;background:conic-gradient(var(--color-accent),var(--color-accent-2),#c99a3e,#b5674f);display:inline-block;flex-shrink:0;"></span>Interchange</div>
+      <div style="display:flex;align-items:center;gap:7px;"><span style="width:10px;height:10px;border-radius:999px;background:var(--color-accent);box-shadow:0 0 0 3px var(--color-accent-200);display:inline-block;flex-shrink:0;"></span>You Are Here</div>
+    </div>
+  </div>
+
+  <!-- SIDE ROUTES labels -->
+  <div style="position:absolute;left:20px;bottom:20px;z-index:2;font:600 10.5px var(--font-body);letter-spacing:.08em;text-transform:uppercase;color:var(--color-accent-2-900);">Side Projects &mdash; Local Transfers</div>
+  <div style="position:absolute;left:20px;bottom:38px;z-index:2;font:600 10.5px var(--font-body);letter-spacing:.08em;text-transform:uppercase;color:var(--color-accent-800);">Internships &mdash; Local Transfers</div>
+
+  <!-- CONTACT trigger -->
+  <button onClick="{{ openContact }}" style="position:absolute;left:50%;bottom:20px;transform:translateX(-50%);z-index:5;font:600 12px var(--font-body);color:var(--color-bg);background:var(--color-accent);border:none;border-radius:999px;padding:9px 16px;cursor:pointer;box-shadow:var(--shadow-sm);white-space:nowrap;">Next Stop: Contact &rarr;</button>
+
+  <sc-for list="{{ stations }}" as="st" hint-placeholder-count="3">
+    <button class="stop-btn" onClick="{{ st.select }}" style="position:absolute;left:{{ st.leftPct }}%;top:{{ st.topPct }}%;transform:translate(-50%,-50%);z-index:2;">
+      <div style="position:relative;width:{{ st.circleSize }}px;height:{{ st.circleSize }}px;">
+        <sc-if value="{{ st.current }}" hint-placeholder-val="{{ false }}">
+          <span style="position:absolute;inset:0;border-radius:999px;background:var(--color-accent);animation:pulse-ring 2s cubic-bezier(0.2,0.6,0.4,1) infinite;"></span>
+        </sc-if>
+        <div style="position:absolute;inset:0;border-radius:999px;background:{{ st.ringBg }};padding:{{ st.ringPad }}px;box-shadow:var(--shadow-sm);animation:{{ st.dotAnim }};">
+          <div style="width:100%;height:100%;border-radius:999px;background:var(--color-neutral-100);display:flex;align-items:center;justify-content:center;">
+            <div style="width:{{ st.innerDot }}px;height:{{ st.innerDot }}px;border-radius:999px;background:{{ st.primaryColor }};"></div>
+          </div>
+        </div>
+      </div>
+    </button>
+    <div style="position:absolute;left:{{ st.labelLeftPct }}%;top:{{ st.labelTopPct }}%;transform:{{ st.labelTransform }};z-index:2;pointer-events:none;text-align:{{ st.labelAlign }};">
+      <div style="font:600 13px var(--font-body);color:var(--color-neutral-900);white-space:nowrap;">{{ st.company }}</div>
+      <div style="font:400 11px var(--font-body);color:var(--color-neutral-600);white-space:nowrap;">{{ st.dates }}</div>
+    </div>
+  </sc-for>
+
+  <sc-for list="{{ projects }}" as="pr" hint-placeholder-count="3">
+    <button class="stop-btn" onClick="{{ pr.select }}" style="position:absolute;left:{{ pr.leftPct }}%;top:{{ pr.topPct }}%;transform:translate(-50%,-50%);z-index:2;">
+      <div style="width:16px;height:16px;border-radius:999px;background:var(--color-neutral-100);border:4px solid var(--color-accent-2);"></div>
+    </button>
+    <div style="position:absolute;left:{{ pr.labelLeftPct }}%;top:{{ pr.labelTopPct }}%;transform:{{ pr.labelTransform }};z-index:2;pointer-events:none;text-align:{{ pr.labelAlign }};">
+      <div style="font:600 12.5px var(--font-body);color:var(--color-accent-2-900);white-space:nowrap;">{{ pr.name }}</div>
+    </div>
+  </sc-for>
+
+  <sc-for list="{{ internships }}" as="it" hint-placeholder-count="2">
+    <button class="stop-btn" onClick="{{ it.select }}" style="position:absolute;left:{{ it.leftPct }}%;top:{{ it.topPct }}%;transform:translate(-50%,-50%);z-index:2;">
+      <div style="width:16px;height:16px;border-radius:999px;background:var(--color-neutral-100);border:4px solid var(--color-accent-700);"></div>
+    </button>
+    <div style="position:absolute;left:{{ it.labelLeftPct }}%;top:{{ it.labelTopPct }}%;transform:{{ it.labelTransform }};z-index:2;pointer-events:none;text-align:{{ it.labelAlign }};">
+      <div style="font:600 12.5px var(--font-body);color:var(--color-accent-800);white-space:nowrap;">{{ it.company }}</div>
+      <div style="font:400 11px var(--font-body);color:var(--color-neutral-600);white-space:nowrap;">{{ it.dates }}</div>
+    </div>
+  </sc-for>
+
+  <!-- STATION DETAIL MODAL -->
+  <sc-if value="{{ selected }}" hint-placeholder-val="{{ false }}">
+    <div onClick="{{ closeModal }}" style="position:fixed;inset:0;background:color-mix(in srgb,var(--color-neutral-900) 35%,transparent);z-index:20;display:flex;align-items:center;justify-content:center;">
+      <div onClick="{{ stopProp }}" style="width:min(520px,88vw);max-height:80vh;overflow:auto;background:var(--color-neutral-100);border-radius:var(--radius-lg);box-shadow:var(--shadow-lg);padding:26px 28px;position:relative;animation:modal-in .18s ease-out;">
+        <button class="icon-btn" onClick="{{ closeModal }}" style="position:absolute;top:16px;right:16px;">&times;</button>
+        <sc-if value="{{ selected.isStation }}" hint-placeholder-val="{{ true }}">
+          <div style="display:flex;align-items:flex-start;gap:10px;row-gap:6px;flex-wrap:wrap;margin-bottom:14px;padding-right:30px;">
+            <h3 style="font:400 22px/1.3 var(--font-heading);margin:0;">{{ selected.company }}</h3>
+            <sc-if value="{{ selected.interchange }}" hint-placeholder-val="{{ false }}">
+              <span style="font:600 9.5px var(--font-body);letter-spacing:.08em;text-transform:uppercase;color:var(--color-accent-800);border:1px solid var(--color-accent-300);border-radius:999px;padding:2px 9px;">Interchange</span>
+            </sc-if>
+            <sc-if value="{{ selected.current }}" hint-placeholder-val="{{ false }}">
+              <span style="font:600 9.5px var(--font-body);letter-spacing:.08em;text-transform:uppercase;color:var(--color-bg);background:var(--color-accent);border-radius:999px;padding:2px 9px;">You Are Here</span>
+            </sc-if>
+          </div>
+          <div style="font:500 14px var(--font-body);color:var(--color-neutral-700);margin-bottom:12px;">{{ selected.role }} &middot; {{ selected.dates }}</div>
+          <div style="display:flex;gap:6px;margin-bottom:14px;flex-wrap:wrap;">
+            <sc-for list="{{ selected.tags }}" as="tg" hint-placeholder-count="2">
+              <span style="font:500 11px var(--font-body);padding:3px 10px;border-radius:999px;background:{{ tg.bg }};color:{{ tg.fg }};">{{ tg.label }}</span>
+            </sc-for>
+          </div>
+          <ul style="margin:0;padding-left:18px;color:var(--color-neutral-800);font:400 14px/1.6 var(--font-body);">
+            <sc-for list="{{ selected.highlights }}" as="hl" hint-placeholder-count="2">
+              <li style="margin-bottom:6px;">{{ hl }}</li>
+            </sc-for>
+          </ul>
+        </sc-if>
+        <sc-if value="{{ selected.isInternship }}" hint-placeholder-val="{{ false }}">
+          <div style="display:flex;align-items:flex-start;gap:10px;row-gap:6px;flex-wrap:wrap;margin-bottom:14px;padding-right:30px;">
+            <h3 style="font:400 22px/1.3 var(--font-heading);margin:0;">{{ selected.company }}</h3>
+            <span style="font:600 9.5px var(--font-body);letter-spacing:.08em;text-transform:uppercase;color:var(--color-accent-800);border:1px solid var(--color-accent-300);border-radius:999px;padding:2px 9px;white-space:nowrap;">Internship</span>
+          </div>
+          <div style="font:500 14px var(--font-body);color:var(--color-neutral-700);margin-bottom:12px;">{{ selected.role }} &middot; {{ selected.dates }}</div>
+          <div style="display:flex;gap:6px;margin-bottom:14px;flex-wrap:wrap;">
+            <sc-for list="{{ selected.tags }}" as="tg" hint-placeholder-count="2">
+              <span style="font:500 11px var(--font-body);padding:3px 10px;border-radius:999px;background:{{ tg.bg }};color:{{ tg.fg }};">{{ tg.label }}</span>
+            </sc-for>
+          </div>
+          <ul style="margin:0;padding-left:18px;color:var(--color-neutral-800);font:400 14px/1.6 var(--font-body);">
+            <sc-for list="{{ selected.highlights }}" as="hl" hint-placeholder-count="2">
+              <li style="margin-bottom:6px;">{{ hl }}</li>
+            </sc-for>
+          </ul>
+        </sc-if>
+        <sc-if value="{{ selected.isProject }}" hint-placeholder-val="{{ false }}">
+          <div style="display:flex;align-items:center;gap:10px;margin-bottom:8px;padding-right:30px;">
+            <span style="width:12px;height:12px;border-radius:999px;border:3px solid var(--color-accent-2);display:inline-block;flex-shrink:0;"></span>
+            <h3 style="font:400 20px var(--font-heading);margin:0;">{{ selected.name }}</h3>
+            <span style="font:600 9.5px var(--font-body);letter-spacing:.08em;text-transform:uppercase;color:var(--color-accent-2-900);border:1px solid var(--color-accent-2-300);border-radius:999px;padding:2px 9px;white-space:nowrap;">Side Route</span>
+          </div>
+          <p style="font:400 14px/1.6 var(--font-body);color:var(--color-neutral-700);margin:0;">{{ selected.desc }}</p>
+        </sc-if>
+      </div>
+    </div>
+  </sc-if>
+
+  <!-- CONTACT MODAL -->
+  <sc-if value="{{ contactOpen }}" hint-placeholder-val="{{ false }}">
+    <div onClick="{{ closeContact }}" style="position:fixed;inset:0;background:color-mix(in srgb,var(--color-neutral-900) 35%,transparent);z-index:21;display:flex;align-items:center;justify-content:center;">
+      <div onClick="{{ stopProp }}" style="width:min(440px,88vw);background:var(--color-neutral-100);border-radius:var(--radius-lg);box-shadow:var(--shadow-lg);padding:28px 30px;position:relative;animation:modal-in .18s ease-out;">
+        <button class="icon-btn" onClick="{{ closeContact }}" style="position:absolute;top:16px;right:16px;">&times;</button>
+        <div style="font:600 10px var(--font-body);letter-spacing:.12em;text-transform:uppercase;color:var(--color-accent-700);margin-bottom:6px;">Next Stop</div>
+        <h2 style="font:400 26px var(--font-heading);margin:0 0 16px;">Contact</h2>
+        <div style="display:flex;gap:10px;flex-wrap:wrap;">
+          <a class="btn btn-primary" href="{{ resumeUrl }}">Resume</a>
+          <a class="btn btn-secondary" href="{{ emailUrl }}">Email</a>
+          <a class="btn btn-secondary" href="{{ linkedinUrl }}">LinkedIn</a>
+          <a class="btn btn-secondary" href="{{ githubUrl }}">GitHub</a>
+        </div>
+      </div>
+    </div>
+  </sc-if>
+
+</div>
+
+</x-dc>
+<script type="text/x-dc" data-dc-script>
+const LINE_COLOR = 'var(--color-accent)';
+const TAG_COLORS = {
+  backend: { bg: 'var(--color-accent-100)', fg: 'var(--color-accent-800)', dot: 'var(--color-accent)', label: 'Backend' },
+  frontend: { bg: 'var(--color-accent-2-100)', fg: 'var(--color-accent-2-800)', dot: 'var(--color-accent-2)', label: 'Frontend' },
+  cloud: { bg: 'rgba(201,154,62,0.16)', fg: '#7a5c1f', dot: '#c99a3e', label: 'Cloud & DevOps' },
+  data: { bg: 'rgba(181,103,79,0.16)', fg: '#7a3d2b', dot: '#b5674f', label: 'Data & Automation' },
+};
+
+const VB_W = 1300, VB_H = 660;
+
+const RAW_STATIONS = [
+  {
+    id: 'college', x: 90, y: 250, company: 'University Name', role: 'B.S. Computer Science (fill in)', dates: 'Aug 2019 \u2013 May 2023',
+    interchange: true, current: false, tagKeys: ['data'], labelSide: 'below',
+    highlights: [
+      'Placeholder \u2014 tell me your school, degree/major, and any highlights (GPA, honors, clubs, capstone) to swap in.',
+    ],
+  },
+  {
+    id: 'booz', x: 850, y: 380, company: 'Booz Allen Hamilton', role: 'Mid-Level Software Engineer', dates: 'June 2023 \u2013 Present',
+    interchange: true, current: true, tagKeys: ['frontend', 'backend', 'cloud', 'data'], labelSide: 'below',
+    highlights: [
+      'Engineered an AI-integrated web form (ChatGPT Gov) for claims processors \u2014 24% faster queue time, 11% higher accuracy.',
+      'Built an event-driven Kafka pipeline processing 2,000 veteran claims/day, cutting pre-processing errors 15%.',
+      'Shipped Angular/TypeScript UIs serving 25,000 VA users; trained 50 developers on Ansible, cutting setup time from 20h to 6h.',
+    ],
+  },
+];
+
+const RAW_INTERNSHIPS = [
+  {
+    id: 'adaptive', x: 260, y: 470, company: 'Adaptive Biotechnologies', role: 'Software Engineer Intern', dates: 'May 2022 \u2013 Aug 2022',
+    tagKeys: ['data'], labelSide: 'below',
+    highlights: [
+      'Built Python automation scripts for company-wide KPI reporting pipelines.',
+      'Eliminated 8 hours/week of manual data entry for executive stakeholders.',
+    ],
+  },
+  {
+    id: 'bear', x: 460, y: 420, company: 'Bear Cognition', role: 'Software Engineer Intern', dates: 'Jan 2023 \u2013 May 2023',
+    tagKeys: ['cloud', 'backend'], labelSide: 'above',
+    highlights: [
+      'Led enterprise-wide cloud migration of 12 production services from GCP to AWS, cutting monthly infra costs 10%.',
+      'Migrated 5 relational SQL databases and refactored cloud functions to serverless AWS Lambda, improving response times 25%.',
+    ],
+  },
+];
+
+const RAW_PROJECTS = [
+  { id: 'proj1', x: 950, y: 560, name: 'Side Project One', desc: 'Placeholder \u2014 swap in your project name and a one-line description.', labelSide: 'below' },
+  { id: 'proj2', x: 1110, y: 560, name: 'Side Project Two', desc: 'Placeholder \u2014 swap in your project name and a one-line description.', labelSide: 'above' },
+  { id: 'proj3', x: 1270, y: 560, name: 'Side Project Three', desc: 'Placeholder \u2014 swap in your project name and a one-line description.', labelSide: 'below' },
+];
+
+const END_X = 900, END_Y = 360, END_ARROW_X = 1050;
+
+function pct(v, total) { return (v / total) * 100; }
+
+class Component extends DCLogic {
+  state = { selectedId: null, contactOpen: false };
+
+  renderVals() {
+    const sel = this.state.selectedId;
+
+    const stations = RAW_STATIONS.map(s => {
+      const ringColors = s.tagKeys.map(k => TAG_COLORS[k].dot);
+      const ringBg = s.interchange ? `conic-gradient(${ringColors.join(',')})` : LINE_COLOR;
+      const belowLabel = s.labelSide === 'below';
+      const xPct = pct(s.x, VB_W);
+      const edge = xPct < 18 ? 'left' : xPct > 82 ? 'right' : 'center';
+      const vY = belowLabel ? '0%' : '-100%';
+      const labelTransform = edge === 'left' ? `translate(0%, ${vY})` : edge === 'right' ? `translate(-100%, ${vY})` : `translate(-50%, ${vY})`;
+      return {
+        ...s,
+        leftPct: xPct, topPct: pct(s.y, VB_H),
+        labelLeftPct: xPct, labelTopPct: pct(s.y, VB_H) + (belowLabel ? 4.2 : -4.2),
+        labelTransform,
+        labelAlign: edge,
+        circleSize: s.interchange ? 42 : 32,
+        ringPad: s.interchange ? 4 : 3,
+        innerDot: s.interchange ? 11 : 8,
+        primaryColor: s.interchange ? ringColors[0] : LINE_COLOR,
+        ringBg,
+        dotAnim: s.current ? 'pulse-dot 2s ease-in-out infinite' : 'none',
+        tags: s.tagKeys.map(k => ({ label: TAG_COLORS[k].label, bg: TAG_COLORS[k].bg, fg: TAG_COLORS[k].fg })),
+        select: () => this.setState({ selectedId: s.id }),
+      };
+    });
+
+    const projects = RAW_PROJECTS.map(p => {
+      const aboveLabel = p.labelSide === 'above';
+      const xPct = pct(p.x, VB_W);
+      const edge = xPct < 18 ? 'left' : xPct > 82 ? 'right' : 'center';
+      const vY = aboveLabel ? '-100%' : '0%';
+      const labelTransform = edge === 'left' ? `translate(0%, ${vY})` : edge === 'right' ? `translate(-100%, ${vY})` : `translate(-50%, ${vY})`;
+      return {
+        ...p,
+        leftPct: xPct, topPct: pct(p.y, VB_H),
+        labelLeftPct: xPct, labelTopPct: pct(p.y, VB_H) + (aboveLabel ? -4.5 : 4.5),
+        labelTransform,
+        labelAlign: edge,
+        select: () => this.setState({ selectedId: p.id }),
+      };
+    });
+
+    const internships = RAW_INTERNSHIPS.map(p => {
+      const aboveLabel = p.labelSide === 'above';
+      const xPct = pct(p.x, VB_W);
+      const edge = xPct < 18 ? 'left' : xPct > 82 ? 'right' : 'center';
+      const vY = aboveLabel ? '-100%' : '0%';
+      const labelTransform = edge === 'left' ? `translate(0%, ${vY})` : edge === 'right' ? `translate(-100%, ${vY})` : `translate(-50%, ${vY})`;
+      return {
+        ...p,
+        leftPct: xPct, topPct: pct(p.y, VB_H),
+        labelLeftPct: xPct, labelTopPct: pct(p.y, VB_H) + (aboveLabel ? -4.5 : 4.5),
+        labelTransform,
+        labelAlign: edge,
+        tags: p.tagKeys.map(k => ({ label: TAG_COLORS[k].label, bg: TAG_COLORS[k].bg, fg: TAG_COLORS[k].fg })),
+        select: () => this.setState({ selectedId: p.id }),
+      };
+    });
+
+    const stationLookup = Object.fromEntries(RAW_STATIONS.map(s => [s.id, s]));
+    const projectLookup = Object.fromEntries(RAW_PROJECTS.map(p => [p.id, p]));
+    const internshipLookup = Object.fromEntries(RAW_INTERNSHIPS.map(p => [p.id, p]));
+    let selected = null;
+    if (sel && stationLookup[sel]) {
+      const s = stationLookup[sel];
+      selected = {
+        isStation: true, isProject: false, isInternship: false,
+        company: s.company, role: s.role, dates: s.dates,
+        interchange: s.interchange, current: s.current,
+        tags: s.tagKeys.map(k => ({ label: TAG_COLORS[k].label, bg: TAG_COLORS[k].bg, fg: TAG_COLORS[k].fg })),
+        highlights: s.highlights,
+      };
+    } else if (sel && internshipLookup[sel]) {
+      const s = internshipLookup[sel];
+      selected = {
+        isStation: false, isProject: false, isInternship: true,
+        company: s.company, role: s.role, dates: s.dates,
+        tags: s.tagKeys.map(k => ({ label: TAG_COLORS[k].label, bg: TAG_COLORS[k].bg, fg: TAG_COLORS[k].fg })),
+        highlights: s.highlights,
+      };
+    } else if (sel && projectLookup[sel]) {
+      const p = projectLookup[sel];
+      selected = { isStation: false, isProject: true, isInternship: false, name: p.name, desc: p.desc };
+    }
+
+    return {
+      name: 'Thomas Griffin',
+      title: 'Software Engineer',
+      tagline: 'Full-stack routes, cloud connections \u2014 running on schedule since 2022.',
+      lineColor: LINE_COLOR,
+      legend: Object.values(TAG_COLORS).map(t => ({ label: t.label, color: t.dot })),
+      stations,
+      projects,
+      internships,
+      selected,
+      contactOpen: this.state.contactOpen,
+      closeModal: () => this.setState({ selectedId: null }),
+      closeContact: () => this.setState({ contactOpen: false }),
+      openContact: () => this.setState({ contactOpen: true }),
+      stopProp: (e) => e.stopPropagation(),
+      mainLinePoints: RAW_STATIONS.map(s => `${s.x},${s.y}`).join(' '),
+      branchPoints: `${RAW_STATIONS[1].x},${RAW_STATIONS[1].y} ${RAW_PROJECTS[0].x},${RAW_PROJECTS[0].y} ${RAW_PROJECTS[1].x},${RAW_PROJECTS[1].y} ${RAW_PROJECTS[2].x},${RAW_PROJECTS[2].y}`,
+      internBranchPoints: `${RAW_STATIONS[0].x},${RAW_STATIONS[0].y} ${RAW_INTERNSHIPS[0].x},${RAW_INTERNSHIPS[0].y} ${RAW_INTERNSHIPS[1].x},${RAW_INTERNSHIPS[1].y}`,
+      endX: END_X, endY: END_Y, endArrowX: END_ARROW_X,
+      resumeUrl: '#',
+      emailUrl: 'mailto:ltgriffin01@gmail.com',
+      linkedinUrl: '#',
+      githubUrl: '#',
+    };
+  }
+}
+</script>
+</body>
+</html>

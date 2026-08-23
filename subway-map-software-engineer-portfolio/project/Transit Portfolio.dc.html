@@ -1,0 +1,509 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+  <link rel="stylesheet" href="_ds/organic-745a8e6d-2071-4912-904e-4bff3ece9f35/styles.css">
+  <script src="_ds/organic-745a8e6d-2071-4912-904e-4bff3ece9f35/_ds_bundle.js"></script>
+  <style>
+    html,body{margin:0;height:100%;overflow:hidden;background:var(--color-bg);color:var(--color-text);font-family:var(--font-body);}
+    a{color:var(--color-accent-700);text-decoration:none;}
+    a:hover{color:var(--color-accent-900);text-decoration:underline;}
+    @keyframes pulse-ring{0%{transform:scale(0.85);opacity:0.8;}70%{transform:scale(2.2);opacity:0;}100%{transform:scale(2.2);opacity:0;}}
+    @keyframes pulse-dot{0%,100%{transform:scale(1);}50%{transform:scale(1.16);}}
+    @keyframes modal-in{from{opacity:0;transform:translateY(8px) scale(0.98);}to{opacity:1;transform:translateY(0) scale(1);}}
+    .stop-btn{border:none;background:none;cursor:pointer;padding:0;}
+    .stop-btn:focus-visible{outline:2px solid var(--color-accent);outline-offset:3px;border-radius:999px;}
+    .icon-btn{border:none;background:var(--color-neutral-200);cursor:pointer;width:30px;height:30px;border-radius:999px;display:flex;align-items:center;justify-content:center;font-size:15px;color:var(--color-neutral-700);}
+    .icon-btn:hover{background:var(--color-neutral-300);}
+    #geo-zoom{transition:transform .8s cubic-bezier(.4,0,.2,1);}
+    #transit-lines{transition:opacity .35s ease;}
+    .stop-wrap{transition:left .8s cubic-bezier(.4,0,.2,1),top .8s cubic-bezier(.4,0,.2,1);}
+  </style>
+</helmet>
+
+<div style="width:100vw;height:100vh;position:relative;overflow:hidden;background:var(--color-bg);">
+
+  <svg viewBox="0 0 1300 660" width="100%" height="100%" preserveAspectRatio="none" style="position:absolute;inset:0;display:block;">
+    <g id="geo-zoom" transform="{{ mapTransform }}">
+
+      <!-- INLAND GROUND: piedmont &rarr; coastal plain -->
+      <path d="M -40 -40 L 700 -40 Q 520 120, 360 260 Q 200 400, 60 520 L -40 600 Z" fill="var(--color-accent-2-100)" opacity="0.85"></path>
+      <g opacity="0.4" fill="none" stroke="var(--color-accent-2-400)" stroke-width="1.6">
+        <path d="M -40 320 Q 90 226, 210 130 Q 300 58, 372 -12"></path>
+        <path d="M -40 430 Q 110 330, 250 216 Q 350 132, 430 44"></path>
+        <path d="M -20 540 Q 150 430, 300 306 Q 410 214, 486 116"></path>
+      </g>
+      <ellipse cx="150" cy="120" rx="150" ry="86" fill="var(--color-accent-2-200)" opacity="0.6"></ellipse>
+      <ellipse cx="330" cy="300" rx="120" ry="70" fill="var(--color-accent-2-200)" opacity="0.45"></ellipse>
+      <ellipse cx="150" cy="430" rx="140" ry="80" fill="var(--color-accent-2-200)" opacity="0.4"></ellipse>
+
+      <!-- ATLANTIC -->
+      <path d="M 1340 660 L 1340 236 Q 1176 292, 1032 376 Q 888 460, 748 542 Q 612 622, 512 660 Z" fill="var(--color-accent-2-400)" opacity="0.55"></path>
+      <path d="M 1340 300 L 1340 236 Q 1176 292, 1032 376 Q 888 460, 748 542 Q 612 622, 512 660 L 610 660 Q 760 580, 900 496 Q 1050 406, 1200 344 Q 1280 312, 1340 300 Z" fill="var(--color-accent-2-300)" opacity="0.75"></path>
+      <path d="M 1340 236 Q 1176 292, 1032 376 Q 888 460, 748 542 Q 612 622, 512 660" fill="none" stroke="var(--color-accent-2-600)" stroke-width="2" opacity="0.5"></path>
+      <g fill="none" stroke="var(--color-accent-2-500)" stroke-width="1.6" opacity="0.35" stroke-dasharray="16 22">
+        <path d="M 1340 366 Q 1150 420, 980 512 Q 840 588, 740 660"></path>
+        <path d="M 1340 472 Q 1200 516, 1070 600 Q 1000 640, 960 660"></path>
+      </g>
+
+      <!-- CHARLESTON HARBOR -->
+      <path d="M 830 508 Q 742 470, 682 436 Q 640 412, 620 458 Q 596 522, 570 604 Q 566 634, 588 640 Q 700 588, 830 508 Z" fill="var(--color-accent-2-300)" opacity="0.85"></path>
+
+      <!-- RIVERS -->
+      <path d="M 286 96 Q 402 214, 500 306 Q 574 376, 636 452" fill="none" stroke="var(--color-accent-2-300)" stroke-width="19" stroke-linecap="round" opacity="0.9"></path>
+      <path d="M 838 44 Q 820 176, 810 296 Q 802 382, 776 452" fill="none" stroke="var(--color-accent-2-300)" stroke-width="21" stroke-linecap="round" opacity="0.9"></path>
+      <path d="M 1150 96 Q 1092 196, 1044 274 Q 1002 350, 946 404 Q 900 444, 852 474" fill="none" stroke="var(--color-accent-2-300)" stroke-width="16" stroke-linecap="round" opacity="0.85"></path>
+      <!-- creeks -->
+      <g fill="none" stroke="var(--color-accent-2-300)" stroke-width="7" stroke-linecap="round" opacity="0.7">
+        <path d="M 660 232 Q 716 268, 748 320"></path>
+        <path d="M 916 168 Q 878 216, 858 268"></path>
+        <path d="M 1046 208 Q 1090 258, 1104 306"></path>
+        <path d="M 452 452 Q 528 478, 578 508"></path>
+      </g>
+
+      <!-- MARSH -->
+      <g opacity="0.75">
+        <path d="M 604 434 Q 646 402, 660 452 Q 668 500, 636 528 Q 600 512, 604 434 Z" fill="var(--color-accent-2-200)"></path>
+        <path d="M 782 440 Q 830 424, 850 466 Q 862 508, 822 524 Q 786 506, 782 440 Z" fill="var(--color-accent-2-200)"></path>
+        <path d="M 950 430 Q 1010 414, 1030 452 Q 1040 490, 996 502 Q 956 490, 950 430 Z" fill="var(--color-accent-2-200)"></path>
+      </g>
+      <g opacity="0.5" stroke="var(--color-accent-2-500)" stroke-width="2" stroke-linecap="round">
+        <path d="M 618 470 l 0 -13"></path><path d="M 630 478 l 0 -12"></path><path d="M 642 470 l 0 -14"></path>
+        <path d="M 800 476 l 0 -13"></path><path d="M 812 484 l 0 -12"></path><path d="M 824 476 l 0 -14"></path>
+        <path d="M 976 462 l 0 -13"></path><path d="M 988 470 l 0 -12"></path><path d="M 1000 462 l 0 -14"></path>
+      </g>
+
+      <!-- CHARLESTON PENINSULA -->
+      <path d="M 645 318 L 770 318 Q 780 400, 750 462 Q 714 520, 686 478 Q 654 400, 645 318 Z" fill="var(--color-neutral-100)"></path>
+      <path d="M 645 318 L 770 318 Q 780 400, 750 462 Q 714 520, 686 478 Q 654 400, 645 318 Z" fill="none" stroke="var(--color-accent-2-500)" stroke-width="1.6" opacity="0.6"></path>
+      <g opacity="0.7" fill="var(--color-neutral-300)">
+        <rect x="654" y="330" width="15" height="17"></rect>
+        <rect x="676" y="330" width="19" height="17"></rect>
+        <rect x="702" y="330" width="15" height="17"></rect>
+        <rect x="724" y="330" width="18" height="17"></rect>
+        <rect x="748" y="332" width="14" height="15"></rect>
+        <rect x="658" y="358" width="16" height="16"></rect>
+        <rect x="682" y="358" width="18" height="16"></rect>
+        <rect x="708" y="358" width="16" height="16"></rect>
+        <rect x="732" y="358" width="19" height="16"></rect>
+        <rect x="666" y="386" width="16" height="16"></rect>
+        <rect x="690" y="386" width="18" height="16"></rect>
+        <rect x="716" y="386" width="16" height="16"></rect>
+        <rect x="740" y="386" width="16" height="16"></rect>
+        <rect x="676" y="414" width="16" height="15"></rect>
+        <rect x="700" y="414" width="17" height="15"></rect>
+        <rect x="724" y="414" width="16" height="15"></rect>
+        <rect x="692" y="440" width="16" height="14"></rect>
+        <rect x="716" y="440" width="15" height="14"></rect>
+      </g>
+      <g opacity="0.55" fill="none" stroke="var(--color-neutral-500)" stroke-width="1.4">
+        <path d="M 648 352 L 768 350"></path>
+        <path d="M 654 380 L 774 378"></path>
+        <path d="M 662 408 L 768 406"></path>
+        <path d="M 674 434 L 754 432"></path>
+        <path d="M 672 320 L 692 476"></path>
+        <path d="M 700 318 L 716 472"></path>
+        <path d="M 730 318 L 742 456"></path>
+      </g>
+      <!-- piers -->
+      <g opacity="0.6" stroke="var(--color-neutral-500)" stroke-width="2" stroke-linecap="round">
+        <path d="M 648 392 l -20 6"></path>
+        <path d="M 656 424 l -19 7"></path>
+        <path d="M 774 372 l 20 5"></path>
+        <path d="M 776 404 l 20 6"></path>
+      </g>
+
+      <!-- DANIEL ISLAND -->
+      <path d="M 872 214 Q 946 196, 986 244 Q 1008 296, 962 330 Q 900 350, 868 306 Q 852 254, 872 214 Z" fill="var(--color-neutral-100)"></path>
+      <path d="M 872 214 Q 946 196, 986 244 Q 1008 296, 962 330 Q 900 350, 868 306 Q 852 254, 872 214 Z" fill="none" stroke="var(--color-accent-2-500)" stroke-width="1.6" opacity="0.6"></path>
+      <g opacity="0.5" fill="none" stroke="var(--color-neutral-500)" stroke-width="1.4">
+        <path d="M 882 242 Q 950 220, 990 264"></path>
+        <path d="M 868 278 Q 934 262, 984 300"></path>
+        <path d="M 912 210 Q 904 272, 918 340"></path>
+        <path d="M 958 208 Q 954 262, 962 328"></path>
+      </g>
+      <g opacity="0.65" fill="var(--color-neutral-300)">
+        <rect x="888" y="248" width="16" height="14"></rect>
+        <rect x="928" y="240" width="18" height="14"></rect>
+        <rect x="962" y="254" width="15" height="14"></rect>
+        <rect x="898" y="288" width="17" height="14"></rect>
+        <rect x="938" y="286" width="16" height="14"></rect>
+      </g>
+      <g opacity="0.55" fill="var(--color-accent-2-400)">
+        <circle cx="880" cy="312" r="7"></circle>
+        <circle cx="978" cy="224" r="6"></circle>
+        <circle cx="996" cy="288" r="7"></circle>
+      </g>
+
+      <!-- MOUNT PLEASANT -->
+      <g opacity="0.5" fill="none" stroke="var(--color-neutral-500)" stroke-width="1.4">
+        <path d="M 866 452 Q 950 424, 1046 404"></path>
+        <path d="M 878 486 Q 964 458, 1060 438"></path>
+        <path d="M 894 518 Q 976 492, 1070 472"></path>
+        <path d="M 908 420 Q 926 480, 936 540"></path>
+        <path d="M 968 400 Q 984 462, 996 522"></path>
+        <path d="M 1028 388 Q 1044 448, 1054 506"></path>
+      </g>
+      <g opacity="0.6" fill="var(--color-neutral-300)">
+        <rect x="886" y="462" width="15" height="14"></rect>
+        <rect x="922" y="452" width="16" height="14"></rect>
+        <rect x="980" y="436" width="15" height="14"></rect>
+        <rect x="1032" y="420" width="16" height="14"></rect>
+        <rect x="944" y="496" width="15" height="14"></rect>
+        <rect x="1004" y="478" width="16" height="14"></rect>
+      </g>
+
+      <!-- JAMES ISLAND -->
+      <g opacity="0.5" fill="none" stroke="var(--color-neutral-500)" stroke-width="1.4">
+        <path d="M 470 552 Q 534 566, 592 588"></path>
+        <path d="M 456 596 Q 518 610, 574 632"></path>
+        <path d="M 508 528 Q 500 586, 496 640"></path>
+        <path d="M 556 546 Q 548 600, 544 650"></path>
+      </g>
+      <g opacity="0.6" fill="var(--color-neutral-300)">
+        <rect x="478" y="566" width="15" height="14"></rect>
+        <rect x="524" y="578" width="16" height="14"></rect>
+        <rect x="492" y="612" width="15" height="14"></rect>
+      </g>
+
+      <!-- SUMMERVILLE -->
+      <ellipse cx="404" cy="164" rx="112" ry="72" fill="var(--color-neutral-100)" opacity="0.75"></ellipse>
+      <g opacity="0.55" fill="none" stroke="var(--color-neutral-500)" stroke-width="1.4">
+        <path d="M 306 148 L 500 140"></path>
+        <path d="M 310 178 L 504 170"></path>
+        <path d="M 318 208 L 496 200"></path>
+        <path d="M 340 114 L 348 220"></path>
+        <path d="M 390 110 L 398 224"></path>
+        <path d="M 440 112 L 448 220"></path>
+      </g>
+      <g opacity="0.65" fill="var(--color-neutral-300)">
+        <rect x="352" y="152" width="16" height="14"></rect>
+        <rect x="404" y="148" width="17" height="14"></rect>
+        <rect x="452" y="154" width="15" height="14"></rect>
+        <rect x="356" y="184" width="16" height="14"></rect>
+        <rect x="408" y="182" width="17" height="14"></rect>
+        <rect x="454" y="186" width="15" height="14"></rect>
+      </g>
+      <g opacity="0.5" fill="var(--color-accent-2-400)">
+        <circle cx="322" cy="228" r="8"></circle>
+        <circle cx="484" cy="224" r="7"></circle>
+        <circle cx="494" cy="112" r="8"></circle>
+      </g>
+
+      <!-- NORTH CHARLESTON / THE NECK -->
+      <g opacity="0.45" fill="none" stroke="var(--color-neutral-500)" stroke-width="1.4">
+        <path d="M 634 240 Q 690 258, 744 282"></path>
+        <path d="M 628 276 Q 686 294, 740 316"></path>
+        <path d="M 664 224 Q 668 274, 674 320"></path>
+        <path d="M 712 240 Q 716 288, 722 322"></path>
+      </g>
+
+      <!-- HIGHWAYS -->
+      <g fill="none" stroke="var(--color-accent-300)" stroke-width="3.4" stroke-linecap="round" opacity="0.75">
+        <path d="M 404 196 Q 520 268, 620 330 Q 668 360, 700 388"></path>
+        <path d="M 700 388 Q 792 424, 878 448 Q 976 470, 1064 452"></path>
+        <path d="M 686 478 Q 616 520, 546 560"></path>
+      </g>
+
+      <!-- BARRIER ISLANDS -->
+      <g>
+        <path d="M 838 512 Q 908 470, 986 430 Q 1014 452, 954 494 Q 884 534, 846 552 Q 826 536, 838 512 Z" fill="var(--color-neutral-100)"></path>
+        <path d="M 838 512 Q 908 470, 986 430 Q 1014 452, 954 494 Q 884 534, 846 552 Q 826 536, 838 512 Z" fill="none" stroke="var(--color-accent-2-500)" stroke-width="1.4" opacity="0.6"></path>
+        <path d="M 1016 418 Q 1094 372, 1174 330 Q 1200 352, 1144 392 Q 1074 434, 1036 452 Q 1014 438, 1016 418 Z" fill="var(--color-neutral-100)"></path>
+        <path d="M 1016 418 Q 1094 372, 1174 330 Q 1200 352, 1144 392 Q 1074 434, 1036 452 Q 1014 438, 1016 418 Z" fill="none" stroke="var(--color-accent-2-500)" stroke-width="1.4" opacity="0.6"></path>
+      </g>
+
+      <!-- GEO LABELS -->
+      <g opacity="{{ geoLabelOpacity }}" font-family="var(--font-heading)" fill="var(--color-accent-2-900)">
+        <g font-size="{{ geoFontLg }}" letter-spacing="{{ geoTrackLg }}">
+          <text x="1092" y="614" text-anchor="middle">ATLANTIC OCEAN</text>
+        </g>
+        <g font-size="{{ geoFontSm }}">
+          <text x="700" y="300" text-anchor="middle">Charleston</text>
+          <text x="700" y="566" text-anchor="middle">Charleston Harbor</text>
+          <text x="530" y="112">Summerville</text>
+          <text x="920" y="188" text-anchor="middle">Daniel Island</text>
+          <text x="982" y="546" text-anchor="middle">Mount Pleasant</text>
+          <text x="486" y="660" text-anchor="middle">James Island</text>
+          <text x="898" y="576">Sullivan&rsquo;s Island</text>
+          <text x="1122" y="308">Isle of Palms</text>
+          <text x="556" y="330" transform="rotate(52 556 330)">Ashley R.</text>
+          <text x="826" y="238" transform="rotate(80 826 238)">Cooper R.</text>
+          <text x="1178" y="228" transform="rotate(60 1178 228)">Wando R.</text>
+          <text x="176" y="58">&uarr; to the Upstate</text>
+        </g>
+      </g>
+    </g>
+
+    <!-- TRANSIT DIAGRAM -->
+    <g id="transit-lines" opacity="{{ lineOpacity }}">
+      <polyline points="-30,-10 150,170" fill="none" stroke="{{ lineColor }}" stroke-width="9" stroke-linecap="round" stroke-dasharray="2 15"></polyline>
+      <polyline points="{{ mainLinePoints }}" fill="none" stroke="{{ lineColor }}" stroke-width="9" stroke-linecap="round" stroke-linejoin="round"></polyline>
+      <polyline points="{{ bearBranch }}" fill="none" stroke="var(--color-accent-700)" stroke-width="6" stroke-linecap="round" stroke-linejoin="round" stroke-dasharray="1 13"></polyline>
+      <polyline points="{{ adaptiveBranch }}" fill="none" stroke="var(--color-accent-700)" stroke-width="6" stroke-linecap="round" stroke-linejoin="round" stroke-dasharray="1 13"></polyline>
+    </g>
+  </svg>
+
+  <!-- NAMEPLATE -->
+  <div style="position:absolute;bottom:24px;left:24px;z-index:5;max-width:300px;border:1px solid var(--color-neutral-300);border-radius:var(--radius-lg);padding:16px 18px;background:var(--color-neutral-100);box-shadow:var(--shadow-md);">
+    <div style="position:absolute;top:0;left:0;right:0;height:5px;background:{{ lineColor }};border-radius:var(--radius-lg) var(--radius-lg) 0 0;"></div>
+    <div style="font:600 9.5px/1 var(--font-body);letter-spacing:.14em;text-transform:uppercase;color:var(--color-accent-700);margin-bottom:7px;">Lowcountry Transit Authority &middot; Line 1</div>
+    <h1 style="font:400 26px/1.1 var(--font-heading);margin:0 0 5px;">{{ name }}</h1>
+    <div style="font:600 13px/1.3 var(--font-body);color:var(--color-accent-700);margin-bottom:6px;">{{ title }}</div>
+    <p style="font:400 12px/1.45 var(--font-body);color:var(--color-neutral-700);margin:0;">{{ tagline }}</p>
+  </div>
+
+  <!-- MAP KEY -->
+  <div style="position:absolute;top:24px;right:24px;z-index:5;border:1px solid var(--color-neutral-300);border-radius:var(--radius-md);padding:12px 15px;background:var(--color-neutral-100);box-shadow:var(--shadow-sm);">
+    <div style="font:600 9.5px/1 var(--font-body);letter-spacing:.1em;text-transform:uppercase;color:var(--color-neutral-600);margin-bottom:9px;">Map Key</div>
+    <div style="display:flex;flex-direction:column;gap:8px;font:400 12px var(--font-body);color:var(--color-neutral-800);">
+      <div style="display:flex;align-items:center;gap:8px;"><span style="width:22px;height:5px;border-radius:999px;background:{{ lineColor }};display:inline-block;flex-shrink:0;"></span>Main line &mdash; career</div>
+      <div style="display:flex;align-items:center;gap:8px;"><span style="width:22px;height:5px;border-radius:999px;background:repeating-linear-gradient(90deg,var(--color-accent-700) 0 2px,transparent 2px 6px);display:inline-block;flex-shrink:0;"></span>Branch &mdash; internship</div>
+      <div style="display:flex;align-items:center;gap:8px;"><span style="width:11px;height:11px;border-radius:999px;background:var(--color-accent);box-shadow:0 0 0 3px var(--color-accent-200);display:inline-block;flex-shrink:0;"></span>You are here</div>
+    </div>
+    <div style="border-top:1px solid var(--color-neutral-300);margin:10px 0 8px;"></div>
+    <div style="font:500 11px/1.4 var(--font-body);color:var(--color-neutral-600);max-width:150px;">Tap a stop to zoom the map to that part of the Lowcountry.</div>
+  </div>
+
+  <!-- ZOOM CAPTION -->
+  <sc-if value="{{ regionLabel }}" hint-placeholder-val="{{ false }}">
+    <div style="position:absolute;left:50%;top:22px;transform:translateX(-50%);z-index:25;display:flex;align-items:center;gap:10px;border:1px solid var(--color-neutral-300);border-radius:999px;padding:7px 7px 7px 15px;background:var(--color-neutral-100);box-shadow:var(--shadow-md);">
+      <span style="font:600 9.5px var(--font-body);letter-spacing:.12em;text-transform:uppercase;color:var(--color-accent-700);">Zoomed to</span>
+      <span style="font:400 15px var(--font-heading);color:var(--color-neutral-900);white-space:nowrap;">{{ regionLabel }}</span>
+      <button class="icon-btn" onClick="{{ resetView }}" title="Back to the full coast">&times;</button>
+    </div>
+  </sc-if>
+
+  <!-- CONTACT -->
+  <button onClick="{{ openContact }}" style="position:absolute;left:50%;bottom:24px;transform:translateX(-50%);z-index:5;font:600 12px var(--font-body);color:var(--color-bg);background:var(--color-accent);border:none;border-radius:999px;padding:9px 16px;cursor:pointer;box-shadow:var(--shadow-sm);white-space:nowrap;">Next Stop: Contact &rarr;</button>
+
+  <sc-for list="{{ stops }}" as="st" hint-placeholder-count="5">
+    <button class="stop-btn stop-wrap" onClick="{{ st.select }}" style="position:absolute;left:{{ st.leftPct }}%;top:{{ st.topPct }}%;transform:translate(-50%,-50%);z-index:3;">
+      <sc-if value="{{ st.isMain }}" hint-placeholder-val="{{ true }}">
+        <div style="position:relative;width:{{ st.circleSize }}px;height:{{ st.circleSize }}px;">
+          <sc-if value="{{ st.current }}" hint-placeholder-val="{{ false }}">
+            <span style="position:absolute;inset:0;border-radius:999px;background:var(--color-accent);animation:pulse-ring 2s cubic-bezier(0.2,0.6,0.4,1) infinite;"></span>
+          </sc-if>
+          <div style="position:absolute;inset:0;border-radius:999px;background:var(--color-accent);padding:4px;box-shadow:var(--shadow-sm);animation:{{ st.dotAnim }};">
+            <div style="width:100%;height:100%;border-radius:999px;background:var(--color-neutral-100);display:flex;align-items:center;justify-content:center;">
+              <div style="width:{{ st.innerDot }}px;height:{{ st.innerDot }}px;border-radius:999px;background:var(--color-accent);"></div>
+            </div>
+          </div>
+        </div>
+      </sc-if>
+      <sc-if value="{{ st.isBranch }}" hint-placeholder-val="{{ false }}">
+        <div style="width:18px;height:18px;border-radius:999px;background:var(--color-neutral-100);border:4px solid var(--color-accent-700);box-shadow:var(--shadow-sm);"></div>
+      </sc-if>
+    </button>
+    <div class="stop-wrap" style="position:absolute;left:{{ st.labelLeftPct }}%;top:{{ st.labelTopPct }}%;transform:{{ st.labelTransform }};z-index:3;pointer-events:none;text-align:{{ st.labelAlign }};">
+      <div style="font:600 13.5px var(--font-body);color:{{ st.labelColor }};white-space:nowrap;">{{ st.company }}</div>
+      <div style="font:600 11.5px var(--font-body);color:var(--color-accent-700);white-space:nowrap;">{{ st.dates }}</div>
+      <div style="font:400 11px var(--font-body);color:var(--color-neutral-600);white-space:nowrap;">{{ st.place }}</div>
+    </div>
+  </sc-for>
+
+  <!-- STOP DETAIL -->
+  <sc-if value="{{ selected }}" hint-placeholder-val="{{ false }}">
+    <div onClick="{{ closeModal }}" style="position:fixed;inset:0;background:color-mix(in srgb,var(--color-neutral-900) 16%,transparent);z-index:20;display:flex;align-items:center;justify-content:flex-end;padding-right:min(6vw,72px);">
+      <div onClick="{{ stopProp }}" style="width:min(450px,86vw);max-height:76vh;overflow:auto;background:var(--color-neutral-100);border-radius:var(--radius-lg);box-shadow:var(--shadow-lg);padding:26px 28px;position:relative;animation:modal-in .18s ease-out;">
+        <button class="icon-btn" onClick="{{ closeModal }}" style="position:absolute;top:16px;right:16px;">&times;</button>
+        <div style="font:600 9.5px var(--font-body);letter-spacing:.12em;text-transform:uppercase;color:var(--color-accent-700);margin-bottom:8px;">{{ selected.kicker }}</div>
+        <div style="display:flex;align-items:flex-start;gap:10px;row-gap:6px;flex-wrap:wrap;margin-bottom:10px;padding-right:26px;">
+          <h3 style="font:400 23px/1.25 var(--font-heading);margin:0;">{{ selected.company }}</h3>
+          <sc-if value="{{ selected.current }}" hint-placeholder-val="{{ false }}">
+            <span style="font:600 9.5px var(--font-body);letter-spacing:.08em;text-transform:uppercase;color:var(--color-bg);background:var(--color-accent);border-radius:999px;padding:3px 9px;white-space:nowrap;">You are here</span>
+          </sc-if>
+        </div>
+        <div style="font:600 15px var(--font-body);color:var(--color-accent-700);margin-bottom:3px;">{{ selected.dates }}</div>
+        <div style="font:400 13.5px var(--font-body);color:var(--color-neutral-700);margin-bottom:14px;">{{ selected.role }} &middot; {{ selected.place }}</div>
+        <div style="display:flex;gap:6px;margin-bottom:14px;flex-wrap:wrap;">
+          <sc-for list="{{ selected.tags }}" as="tg" hint-placeholder-count="2">
+            <span style="font:500 11px var(--font-body);padding:3px 10px;border-radius:999px;background:{{ tg.bg }};color:{{ tg.fg }};">{{ tg.label }}</span>
+          </sc-for>
+        </div>
+        <ul style="margin:0;padding-left:18px;color:var(--color-neutral-800);font:400 14px/1.6 var(--font-body);">
+          <sc-for list="{{ selected.highlights }}" as="hl" hint-placeholder-count="2">
+            <li style="margin-bottom:6px;">{{ hl }}</li>
+          </sc-for>
+        </ul>
+      </div>
+    </div>
+  </sc-if>
+
+  <!-- CONTACT MODAL -->
+  <sc-if value="{{ contactOpen }}" hint-placeholder-val="{{ false }}">
+    <div onClick="{{ closeContact }}" style="position:fixed;inset:0;background:color-mix(in srgb,var(--color-neutral-900) 30%,transparent);z-index:21;display:flex;align-items:center;justify-content:center;">
+      <div onClick="{{ stopProp }}" style="width:min(430px,86vw);background:var(--color-neutral-100);border-radius:var(--radius-lg);box-shadow:var(--shadow-lg);padding:28px 30px;position:relative;animation:modal-in .18s ease-out;">
+        <button class="icon-btn" onClick="{{ closeContact }}" style="position:absolute;top:16px;right:16px;">&times;</button>
+        <div style="font:600 10px var(--font-body);letter-spacing:.12em;text-transform:uppercase;color:var(--color-accent-700);margin-bottom:6px;">Next Stop</div>
+        <h2 style="font:400 26px var(--font-heading);margin:0 0 16px;">Contact</h2>
+        <div style="display:flex;gap:10px;flex-wrap:wrap;">
+          <a class="btn btn-primary" href="{{ resumeUrl }}">Resume</a>
+          <a class="btn btn-secondary" href="{{ emailUrl }}">Email</a>
+          <a class="btn btn-secondary" href="{{ linkedinUrl }}">LinkedIn</a>
+          <a class="btn btn-secondary" href="{{ githubUrl }}">GitHub</a>
+        </div>
+      </div>
+    </div>
+  </sc-if>
+
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props="{&quot;zoomOnClick&quot;:{&quot;editor&quot;:&quot;boolean&quot;,&quot;default&quot;:true,&quot;tsType&quot;:&quot;boolean&quot;,&quot;section&quot;:&quot;Map behavior&quot;},&quot;zoomScale&quot;:{&quot;editor&quot;:&quot;range&quot;,&quot;default&quot;:3.2,&quot;min&quot;:1.6,&quot;max&quot;:5,&quot;step&quot;:0.2,&quot;tsType&quot;:&quot;number&quot;,&quot;section&quot;:&quot;Map behavior&quot;},&quot;showGeoLabels&quot;:{&quot;editor&quot;:&quot;boolean&quot;,&quot;default&quot;:true,&quot;tsType&quot;:&quot;boolean&quot;,&quot;section&quot;:&quot;Map behavior&quot;}}">
+const LINE_COLOR = 'var(--color-accent)';
+const VB_W = 1300, VB_H = 660;
+
+const TAGS = {
+  backend: { bg: 'var(--color-accent-100)', fg: 'var(--color-accent-800)', label: 'Backend' },
+  frontend: { bg: 'var(--color-accent-2-100)', fg: 'var(--color-accent-2-800)', label: 'Frontend' },
+  cloud: { bg: 'rgba(201,154,62,0.16)', fg: '#7a5c1f', label: 'Cloud & DevOps' },
+  data: { bg: 'rgba(181,103,79,0.16)', fg: '#7a3d2b', label: 'Data & Automation' },
+  study: { bg: 'var(--color-neutral-200)', fg: 'var(--color-neutral-800)', label: 'Coursework' },
+};
+
+const STOPS = [
+  {
+    id: 'hometown', kind: 'main', x: 150, y: 170, company: 'Hometown', place: 'Upstate, South Carolina',
+    role: 'Where the line begins', dates: 'Origin station', labelSide: 'below',
+    kicker: 'Main line \u00b7 Origin', zoom: { x: 150, y: 170, k: 2.4, label: 'Upstate South Carolina' },
+    tagKeys: [],
+    highlights: ['Placeholder \u2014 tell me your hometown and I\u2019ll name the stop properly.'],
+  },
+  {
+    id: 'bear', kind: 'branch', x: 400, y: 150, company: 'Bear Cognition', place: 'Summerville, SC',
+    role: 'Software Engineer Intern', dates: 'Jan 2023 \u2013 May 2023', labelSide: 'left',
+    kicker: 'Branch line \u00b7 Rejoins the main line', zoom: { x: 404, y: 168, k: 3.2, label: 'Summerville' },
+    tagKeys: ['cloud', 'backend'],
+    highlights: [
+      'Led enterprise-wide cloud migration of 12 production services from GCP to AWS, cutting monthly infra costs 10%.',
+      'Migrated 5 relational SQL databases and refactored cloud functions to serverless AWS Lambda, improving response times 25%.',
+    ],
+  },
+  {
+    id: 'college', kind: 'main', x: 700, y: 410, company: 'College of Charleston', place: 'Downtown Charleston, SC',
+    role: 'B.S. Computer Science', dates: 'Aug 2019 \u2013 May 2023', labelSide: 'below',
+    kicker: 'Main line \u00b7 Charleston', zoom: { x: 706, y: 396, k: 3.2, label: 'Downtown Charleston' },
+    tagKeys: ['study'],
+    highlights: ['Placeholder \u2014 confirm your major and add any honors, clubs, or capstone work you want listed here.'],
+  },
+  {
+    id: 'adaptive', kind: 'branch', x: 862, y: 382, company: 'Adaptive Biotechnologies', place: 'Remote',
+    role: 'Software Engineer Intern', dates: 'May 2022 \u2013 Aug 2022', labelSide: 'right',
+    kicker: 'Branch line \u00b7 Rejoins the main line', zoom: { x: 862, y: 382, k: 1.6, label: 'Remote' },
+    tagKeys: ['data'],
+    highlights: [
+      'Built Python automation scripts for company-wide KPI reporting pipelines.',
+      'Eliminated 8 hours/week of manual data entry for executive stakeholders.',
+    ],
+  },
+  {
+    id: 'booz', kind: 'main', x: 932, y: 268, company: 'Booz Allen Hamilton', place: 'Daniel Island, SC',
+    role: 'Mid-Level Software Engineer', dates: 'June 2023 \u2013 Present', labelSide: 'below',
+    current: true, kicker: 'Main line \u00b7 Terminus', zoom: { x: 926, y: 272, k: 3.2, label: 'Daniel Island' },
+    tagKeys: ['frontend', 'backend', 'cloud', 'data'],
+    highlights: [
+      'Engineered an AI-integrated web form (ChatGPT Gov) for claims processors \u2014 24% faster queue time, 11% higher accuracy.',
+      'Built an event-driven Kafka pipeline processing 2,000 veteran claims/day, cutting pre-processing errors 15%.',
+      'Shipped Angular/TypeScript UIs serving 25,000 VA users; trained 50 developers on Ansible, cutting setup time from 20h to 6h.',
+    ],
+  },
+];
+
+const pct = (v, total) => (v / total) * 100;
+
+function labelBox(s, xPct, yPct) {
+  const side = s.labelSide || 'below';
+  if (side === 'right') return { labelLeftPct: xPct + 1.7, labelTopPct: yPct, labelTransform: 'translate(0,-50%)', labelAlign: 'left' };
+  if (side === 'left') return { labelLeftPct: xPct - 1.7, labelTopPct: yPct, labelTransform: 'translate(-100%,-50%)', labelAlign: 'right' };
+  const edge = xPct < 18 ? 'left' : xPct > 82 ? 'right' : 'center';
+  const h = edge === 'left' ? '0%' : edge === 'right' ? '-100%' : '-50%';
+  const above = side === 'above';
+  return {
+    labelLeftPct: xPct,
+    labelTopPct: yPct + (above ? -4.6 : 4.6),
+    labelTransform: `translate(${h}, ${above ? '-100%' : '0%'})`,
+    labelAlign: edge,
+  };
+}
+
+class Component extends DCLogic {
+  state = { selectedId: null, contactOpen: false, zoom: null };
+
+  pick(item) {
+    const on = this.props.zoomOnClick ?? true;
+    const base = this.props.zoomScale ?? 3.2;
+    const k = item.zoom.k > 1.8 ? base : item.zoom.k;
+    this.setState({ selectedId: item.id, zoom: on ? { ...item.zoom, k } : null });
+  }
+
+  renderVals() {
+    const z = this.state.zoom;
+    const k = z ? z.k : 1;
+    // focus left of centre: the detail card is anchored right, so the zoomed area stays clear
+    const FX = VB_W * 0.35, FY = VB_H * 0.40;
+    const project = (x, y) => z ? [FX + k * (x - z.x), FY + k * (y - z.y)] : [x, y];
+
+    const visible = z ? STOPS.filter(s => s.id === this.state.selectedId) : STOPS;
+    const stops = visible.map(s => {
+      const [px, py] = project(s.x, s.y);
+      const xPct = pct(px, VB_W), yPct = pct(py, VB_H);
+      return {
+        ...s,
+        isMain: s.kind === 'main',
+        isBranch: s.kind === 'branch',
+        leftPct: xPct, topPct: yPct,
+        ...labelBox(s, xPct, yPct),
+        labelColor: s.kind === 'main' ? 'var(--color-neutral-900)' : 'var(--color-accent-800)',
+        circleSize: s.current ? 40 : 34,
+        innerDot: s.current ? 11 : 9,
+        dotAnim: s.current ? 'pulse-dot 2s ease-in-out infinite' : 'none',
+        select: () => this.pick(s),
+      };
+    });
+
+    const hit = STOPS.find(s => s.id === this.state.selectedId);
+    const selected = hit ? {
+      company: hit.company, role: hit.role, dates: hit.dates, place: hit.place,
+      kicker: hit.kicker, current: !!hit.current,
+      tags: (hit.tagKeys || []).map(t => TAGS[t]),
+      highlights: hit.highlights,
+    } : null;
+
+    return {
+      name: 'Thomas Griffin',
+      title: 'Software Engineer',
+      tagline: 'Upstate roots, Lowcountry lines \u2014 Charleston to Daniel Island.',
+      lineColor: LINE_COLOR,
+      stops, selected,
+      mapTransform: z ? `translate(${FX - k * z.x} ${FY - k * z.y}) scale(${k})` : 'translate(0 0) scale(1)',
+      lineOpacity: z ? 0 : 1,
+      geoLabelOpacity: (this.props.showGeoLabels ?? true) ? 0.6 : 0,
+      geoFontSm: 13 / k,
+      geoFontLg: 17 / k,
+      geoTrackLg: 5 / k,
+      regionLabel: z ? z.label : null,
+      mainLinePoints: '150,170 390,410 690,410 780,320 880,320 932,268',
+      bearBranch: '690,410 600,320 500,230 430,170 400,150 530,132 690,200 770,266 780,320',
+      adaptiveBranch: '800,320 828,382 896,382 880,320',
+      contactOpen: this.state.contactOpen,
+      openContact: () => this.setState({ contactOpen: true }),
+      closeContact: () => this.setState({ contactOpen: false }),
+      closeModal: () => this.setState({ selectedId: null, zoom: null }),
+      resetView: () => this.setState({ zoom: null, selectedId: null }),
+      stopProp: e => e.stopPropagation(),
+      resumeUrl: '#',
+      emailUrl: 'mailto:ltgriffin01@gmail.com',
+      linkedinUrl: '#',
+      githubUrl: '#',
+    };
+  }
+}
+</script>
+</body>
+</html>

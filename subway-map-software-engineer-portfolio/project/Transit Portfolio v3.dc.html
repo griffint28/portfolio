@@ -1,0 +1,462 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+  <link rel="stylesheet" href="_ds/organic-745a8e6d-2071-4912-904e-4bff3ece9f35/styles.css">
+  <script src="_ds/organic-745a8e6d-2071-4912-904e-4bff3ece9f35/_ds_bundle.js"></script>
+  <style>
+    html,body{margin:0;height:100%;overflow:hidden;background:var(--color-bg);color:var(--color-text);font-family:var(--font-body);}
+    a{color:var(--color-accent-700);text-decoration:none;}
+    a:hover{color:var(--color-accent-900);text-decoration:underline;}
+    @keyframes pulse-ring{0%{transform:scale(0.85);opacity:0.8;}70%{transform:scale(2.2);opacity:0;}100%{transform:scale(2.2);opacity:0;}}
+    @keyframes pulse-dot{0%,100%{transform:scale(1);}50%{transform:scale(1.16);}}
+    @keyframes modal-in{from{opacity:0;transform:translateY(8px) scale(0.98);}to{opacity:1;transform:translateY(0) scale(1);}}
+    .stop-btn{border:none;background:none;cursor:pointer;padding:0;}
+    .stop-btn:focus-visible{outline:2px solid var(--color-accent);outline-offset:3px;border-radius:999px;}
+    .icon-btn{border:none;background:var(--color-neutral-200);cursor:pointer;width:30px;height:30px;border-radius:999px;display:flex;align-items:center;justify-content:center;font-size:15px;color:var(--color-neutral-700);}
+    .icon-btn:hover{background:var(--color-neutral-300);}
+    #geo-zoom{transition:transform .75s cubic-bezier(.4,0,.2,1);}
+  </style>
+</helmet>
+
+<div style="width:100vw;height:100vh;position:relative;overflow:hidden;background:var(--color-bg);">
+
+  <svg viewBox="0 0 1300 660" width="100%" height="100%" preserveAspectRatio="none" style="position:absolute;inset:0;display:block;">
+    <g id="geo-zoom" transform="{{ mapTransform }}">
+
+      <!-- INLAND TEXTURE -->
+      <ellipse cx="180" cy="230" rx="220" ry="130" fill="var(--color-accent-2-100)" opacity="0.5"></ellipse>
+      <ellipse cx="760" cy="120" rx="260" ry="110" fill="var(--color-accent-2-100)" opacity="0.4"></ellipse>
+      <ellipse cx="240" cy="470" rx="190" ry="105" fill="var(--color-accent-2-100)" opacity="0.45"></ellipse>
+
+      <!-- ATLANTIC -->
+      <path d="M -40 660 L -40 604 Q 180 588, 360 608 Q 520 624, 700 598 Q 880 572, 1060 558 Q 1200 547, 1340 568 L 1340 660 Z" fill="var(--color-accent-2-200)" opacity="0.75"></path>
+      <g fill="none" stroke="var(--color-accent-2-400)" stroke-width="2.5" stroke-linecap="round" opacity="0.5" stroke-dasharray="14 20">
+        <path d="M -20 632 Q 300 616, 640 626 Q 980 636, 1320 614"></path>
+        <path d="M 60 654 Q 400 642, 740 650 Q 1080 658, 1320 642"></path>
+      </g>
+
+      <!-- HARBOR -->
+      <path d="M 360 660 Q 392 552, 470 496 Q 530 452, 606 428 Q 668 410, 706 430 Q 766 462, 796 528 Q 826 594, 838 660 Z" fill="var(--color-accent-2-200)" opacity="0.8"></path>
+      <!-- EAST BAY around Daniel Island -->
+      <path d="M 966 470 Q 1074 424, 1186 448 Q 1276 468, 1330 520 L 1330 604 Q 1150 570, 966 562 Z" fill="var(--color-accent-2-200)" opacity="0.7"></path>
+
+      <!-- RIVERS -->
+      <path d="M 262 96 Q 348 244, 414 344 Q 458 424, 468 498" fill="none" stroke="var(--color-accent-2-200)" stroke-width="24" stroke-linecap="round" opacity="0.85"></path>
+      <path d="M 1004 52 Q 992 186, 1020 282 Q 1032 356, 992 432 Q 950 486, 878 508" fill="none" stroke="var(--color-accent-2-200)" stroke-width="26" stroke-linecap="round" opacity="0.85"></path>
+      <path d="M 1296 176 Q 1258 278, 1236 356 Q 1216 428, 1204 470" fill="none" stroke="var(--color-accent-2-200)" stroke-width="20" stroke-linecap="round" opacity="0.8"></path>
+
+      <!-- CHARLESTON PENINSULA -->
+      <path d="M 496 372 L 636 372 Q 656 452, 616 528 Q 578 580, 546 534 Q 500 458, 496 372 Z" fill="var(--color-bg)"></path>
+      <path d="M 496 372 L 636 372 Q 656 452, 616 528 Q 578 580, 546 534 Q 500 458, 496 372 Z" fill="none" stroke="var(--color-accent-2-300)" stroke-width="2"></path>
+      <g opacity="0.85" fill="var(--color-neutral-300)">
+        <rect x="516" y="396" width="22" height="26" rx="3"></rect>
+        <rect x="546" y="392" width="18" height="30" rx="3"></rect>
+        <rect x="574" y="398" width="24" height="24" rx="3"></rect>
+        <rect x="522" y="436" width="20" height="24" rx="3"></rect>
+        <rect x="556" y="440" width="26" height="22" rx="3"></rect>
+        <rect x="592" y="436" width="18" height="26" rx="3"></rect>
+        <rect x="548" y="478" width="22" height="24" rx="3"></rect>
+        <rect x="580" y="474" width="18" height="22" rx="3"></rect>
+      </g>
+      <g opacity="0.9">
+        <polygon points="606,372 614,340 622,372" fill="var(--color-accent-400)"></polygon>
+        <polygon points="524,396 530,368 536,396" fill="var(--color-accent-400)"></polygon>
+      </g>
+      <!-- peninsula street grid + piers -->
+      <g opacity="0.5" stroke="var(--color-neutral-400)" stroke-width="1.5" fill="none">
+        <path d="M 512 380 L 528 522"></path>
+        <path d="M 552 376 L 566 536"></path>
+        <path d="M 592 376 L 596 520"></path>
+        <path d="M 500 404 L 632 402"></path>
+        <path d="M 504 442 L 638 440"></path>
+        <path d="M 522 484 L 620 480"></path>
+      </g>
+      <g opacity="0.6" stroke="var(--color-neutral-400)" stroke-width="2.5" stroke-linecap="round">
+        <path d="M 500 424 l -22 8"></path>
+        <path d="M 504 462 l -22 9"></path>
+        <path d="M 636 404 l 22 7"></path>
+        <path d="M 646 442 l 22 8"></path>
+      </g>
+
+      <!-- DANIEL ISLAND -->
+      <path d="M 1044 292 Q 1130 268, 1214 304 Q 1258 336, 1226 396 Q 1176 448, 1094 432 Q 1030 416, 1030 356 Q 1030 312, 1044 292 Z" fill="var(--color-bg)"></path>
+      <path d="M 1044 292 Q 1130 268, 1214 304 Q 1258 336, 1226 396 Q 1176 448, 1094 432 Q 1030 416, 1030 356 Q 1030 312, 1044 292 Z" fill="none" stroke="var(--color-accent-2-300)" stroke-width="2"></path>
+      <g opacity="0.8" fill="var(--color-accent-2-400)">
+        <circle cx="1074" cy="404" r="9"></circle>
+        <circle cx="1196" cy="386" r="8"></circle>
+        <circle cx="1208" cy="322" r="8"></circle>
+      </g>
+      <g opacity="0.85" fill="var(--color-neutral-300)">
+        <rect x="1096" y="300" width="26" height="22" rx="3"></rect>
+        <rect x="1132" y="304" width="20" height="20" rx="3"></rect>
+        <rect x="1166" y="312" width="22" height="20" rx="3"></rect>
+        <rect x="1104" y="356" width="24" height="20" rx="3"></rect>
+        <rect x="1146" y="360" width="20" height="18" rx="3"></rect>
+      </g>
+      <!-- Daniel Island loop road + marina -->
+      <g opacity="0.5" fill="none" stroke="var(--color-neutral-400)" stroke-width="1.8">
+        <path d="M 1060 340 Q 1120 306, 1198 332 Q 1224 366, 1180 400 Q 1112 424, 1064 392 Q 1044 366, 1060 340 Z"></path>
+        <path d="M 1120 306 L 1128 424"></path>
+      </g>
+      <g opacity="0.6" stroke="var(--color-neutral-400)" stroke-width="2.5" stroke-linecap="round">
+        <path d="M 1108 430 l -6 20"></path>
+        <path d="M 1136 432 l -4 20"></path>
+        <path d="M 1164 424 l 2 20"></path>
+      </g>
+
+      <!-- SUMMERVILLE (inland town) -->
+      <g opacity="0.5" fill="none" stroke="var(--color-neutral-400)" stroke-width="1.6">
+        <path d="M 838 152 L 1002 148"></path>
+        <path d="M 840 186 L 1004 182"></path>
+        <path d="M 846 216 L 996 212"></path>
+        <path d="M 868 136 L 872 226"></path>
+        <path d="M 918 132 L 922 228"></path>
+        <path d="M 968 134 L 972 224"></path>
+      </g>
+      <g opacity="0.9">
+        <rect x="890" y="156" width="26" height="24" rx="3" fill="var(--color-neutral-300)"></rect>
+        <polygon points="890,156 903,138 916,156" fill="var(--color-accent-300)"></polygon>
+        <rect x="934" y="160" width="22" height="20" rx="3" fill="var(--color-neutral-300)"></rect>
+        <polygon points="934,160 945,144 956,160" fill="var(--color-accent-2-300)"></polygon>
+        <rect x="978" y="158" width="18" height="22" rx="3" fill="var(--color-neutral-300)"></rect>
+        <rect x="846" y="192" width="22" height="20" rx="3" fill="var(--color-neutral-300)"></rect>
+        <polygon points="846,192 857,176 868,192" fill="var(--color-accent-2-300)"></polygon>
+        <rect x="932" y="192" width="24" height="20" rx="3" fill="var(--color-neutral-300)"></rect>
+      </g>
+      <g opacity="0.8" fill="var(--color-accent-2-400)">
+        <circle cx="828" cy="176" r="11"></circle>
+        <circle cx="906" cy="230" r="9"></circle>
+        <circle cx="1000" cy="200" r="10"></circle>
+      </g>
+
+      <!-- UPSTATE: pines + hometown lanes -->
+      <g opacity="0.75" fill="var(--color-accent-2-400)">
+        <polygon points="470,72 484,34 498,72"></polygon>
+        <polygon points="508,86 520,52 532,86"></polygon>
+        <polygon points="640,64 654,26 668,64"></polygon>
+        <polygon points="676,84 688,52 700,84"></polygon>
+        <polygon points="612,104 624,74 636,104"></polygon>
+      </g>
+      <g opacity="0.45" fill="none" stroke="var(--color-neutral-400)" stroke-width="1.6">
+        <path d="M 486 132 Q 580 112, 692 132"></path>
+        <path d="M 520 40 Q 560 84, 548 138"></path>
+        <path d="M 646 36 Q 626 86, 656 140"></path>
+      </g>
+      <g opacity="0.85" fill="var(--color-neutral-300)">
+        <rect x="596" y="52" width="24" height="20" rx="3"></rect>
+        <rect x="504" y="108" width="22" height="18" rx="3"></rect>
+        <rect x="668" y="112" width="20" height="18" rx="3"></rect>
+      </g>
+
+      <!-- BARRIER ISLANDS -->
+      <g opacity="0.9">
+        <path d="M 866 566 Q 940 550, 1014 562 Q 1024 578, 1010 588 Q 936 578, 872 590 Q 858 578, 866 566 Z" fill="var(--color-bg)" stroke="var(--color-accent-2-300)" stroke-width="1.5"></path>
+        <path d="M 216 600 Q 300 586, 372 602 Q 380 618, 366 628 Q 296 614, 224 626 Q 210 614, 216 600 Z" fill="var(--color-bg)" stroke="var(--color-accent-2-300)" stroke-width="1.5"></path>
+      </g>
+
+      <!-- MARSH TUFTS -->
+      <g opacity="0.55" stroke="var(--color-accent-2-400)" stroke-width="2.5" stroke-linecap="round">
+        <path d="M 452 546 l 0 -14"></path><path d="M 462 552 l 0 -12"></path><path d="M 472 546 l 0 -15"></path>
+        <path d="M 700 470 l 0 -14"></path><path d="M 712 476 l 0 -12"></path><path d="M 724 470 l 0 -15"></path>
+        <path d="M 1008 496 l 0 -14"></path><path d="M 1020 502 l 0 -12"></path><path d="M 1032 496 l 0 -15"></path>
+      </g>
+
+      <!-- GEO LABELS -->
+      <g opacity="{{ geoLabelOpacity }}" font-family="var(--font-heading)" fill="var(--color-accent-2-900)">
+        <g font-size="{{ geoFontLg }}" letter-spacing="{{ geoTrackLg }}">
+          <text x="830" y="648" text-anchor="middle">ATLANTIC OCEAN</text>
+        </g>
+        <g font-size="{{ geoFontSm }}">
+          <text x="470" y="604" text-anchor="middle">Charleston Harbor</text>
+          <text x="648" y="352">Charleston</text>
+          <text x="1128" y="470" text-anchor="middle">Daniel Island</text>
+          <text x="906" y="112" text-anchor="middle">Summerville</text>
+          <text x="286" y="330" transform="rotate(52 286 330)">Ashley River</text>
+          <text x="1046" y="180">Cooper River</text>
+          <text x="1252" y="250" text-anchor="end">Wando River</text>
+          <text x="946" y="604" text-anchor="middle">Sullivan&rsquo;s Island</text>
+          <text x="720" y="34">&uarr; To the Upstate</text>
+        </g>
+      </g>
+    </g>
+
+    <!-- TRANSIT LINES (fixed diagram over the map) -->
+    <polyline points="560,-40 560,110" fill="none" stroke="{{ lineColor }}" stroke-width="9" stroke-linecap="round" stroke-dasharray="2 15"></polyline>
+    <polyline points="{{ mainLinePoints }}" fill="none" stroke="{{ lineColor }}" stroke-width="9" stroke-linecap="round" stroke-linejoin="round"></polyline>
+    <polyline points="{{ adaptiveBranch }}" fill="none" stroke="var(--color-accent-700)" stroke-width="6" stroke-linecap="round" stroke-linejoin="round" stroke-dasharray="1 13"></polyline>
+    <polyline points="{{ bearBranch }}" fill="none" stroke="var(--color-accent-700)" stroke-width="6" stroke-linecap="round" stroke-linejoin="round" stroke-dasharray="1 13"></polyline>
+  </svg>
+
+  <!-- NAMEPLATE -->
+  <div style="position:absolute;top:24px;left:24px;z-index:5;max-width:308px;border:1px solid var(--color-neutral-300);border-radius:var(--radius-lg);padding:16px 18px;background:var(--color-neutral-100);box-shadow:var(--shadow-md);">
+    <div style="position:absolute;top:0;left:0;right:0;height:5px;background:{{ lineColor }};border-radius:var(--radius-lg) var(--radius-lg) 0 0;"></div>
+    <div style="font:600 9.5px/1 var(--font-body);letter-spacing:.14em;text-transform:uppercase;color:var(--color-accent-700);margin-bottom:7px;">Lowcountry Transit Authority &middot; Line 1</div>
+    <h1 style="font:400 27px/1.1 var(--font-heading);margin:0 0 5px;">{{ name }}</h1>
+    <div style="font:600 13px/1.3 var(--font-body);color:var(--color-accent-700);margin-bottom:6px;">{{ title }}</div>
+    <p style="font:400 12px/1.45 var(--font-body);color:var(--color-neutral-700);margin:0;">{{ tagline }}</p>
+  </div>
+
+  <!-- LEGEND -->
+  <div style="position:absolute;top:24px;right:24px;z-index:5;border:1px solid var(--color-neutral-300);border-radius:var(--radius-md);padding:12px 15px;background:var(--color-neutral-100);box-shadow:var(--shadow-sm);">
+    <div style="font:600 9.5px/1 var(--font-body);letter-spacing:.1em;text-transform:uppercase;color:var(--color-neutral-600);margin-bottom:9px;">Map Key</div>
+    <div style="display:flex;flex-direction:column;gap:8px;font:400 12px var(--font-body);color:var(--color-neutral-800);">
+      <div style="display:flex;align-items:center;gap:8px;"><span style="width:22px;height:5px;border-radius:999px;background:{{ lineColor }};display:inline-block;flex-shrink:0;"></span>Main line &mdash; career</div>
+      <div style="display:flex;align-items:center;gap:8px;"><span style="width:22px;height:5px;border-radius:999px;background:repeating-linear-gradient(90deg,var(--color-accent-700) 0 2px,transparent 2px 6px);display:inline-block;flex-shrink:0;"></span>Branch &mdash; internship</div>
+      <div style="display:flex;align-items:center;gap:8px;"><span style="width:11px;height:11px;border-radius:999px;background:var(--color-accent);box-shadow:0 0 0 3px var(--color-accent-200);display:inline-block;flex-shrink:0;"></span>You are here</div>
+    </div>
+    <div style="border-top:1px solid var(--color-neutral-300);margin:10px 0 8px;"></div>
+    <div style="font:500 11px/1.4 var(--font-body);color:var(--color-neutral-600);max-width:150px;">Tap a stop to zoom the map to that part of the Lowcountry.</div>
+  </div>
+
+  <!-- ZOOM CAPTION -->
+  <sc-if value="{{ regionLabel }}" hint-placeholder-val="{{ false }}">
+    <div style="position:absolute;left:24px;bottom:22px;z-index:25;display:flex;align-items:center;gap:10px;border:1px solid var(--color-neutral-300);border-radius:999px;padding:8px 8px 8px 15px;background:var(--color-neutral-100);box-shadow:var(--shadow-md);">
+      <span style="font:600 9.5px var(--font-body);letter-spacing:.12em;text-transform:uppercase;color:var(--color-accent-700);">Zoomed to</span>
+      <span style="font:400 15px var(--font-heading);color:var(--color-neutral-900);white-space:nowrap;">{{ regionLabel }}</span>
+      <button class="icon-btn" onClick="{{ resetView }}" title="Back to the full coast">&times;</button>
+    </div>
+  </sc-if>
+
+  <!-- CONTACT -->
+  <button onClick="{{ openContact }}" style="position:absolute;left:50%;bottom:22px;transform:translateX(-50%);z-index:5;font:600 12px var(--font-body);color:var(--color-bg);background:var(--color-accent);border:none;border-radius:999px;padding:9px 16px;cursor:pointer;box-shadow:var(--shadow-sm);white-space:nowrap;">Next Stop: Contact &rarr;</button>
+
+  <!-- MAIN-LINE STOPS -->
+  <sc-for list="{{ stations }}" as="st" hint-placeholder-count="3">
+    <button class="stop-btn" onClick="{{ st.select }}" style="position:absolute;left:{{ st.leftPct }}%;top:{{ st.topPct }}%;transform:translate(-50%,-50%);z-index:3;">
+      <div style="position:relative;width:{{ st.circleSize }}px;height:{{ st.circleSize }}px;">
+        <sc-if value="{{ st.current }}" hint-placeholder-val="{{ false }}">
+          <span style="position:absolute;inset:0;border-radius:999px;background:var(--color-accent);animation:pulse-ring 2s cubic-bezier(0.2,0.6,0.4,1) infinite;"></span>
+        </sc-if>
+        <div style="position:absolute;inset:0;border-radius:999px;background:var(--color-accent);padding:4px;box-shadow:var(--shadow-sm);animation:{{ st.dotAnim }};">
+          <div style="width:100%;height:100%;border-radius:999px;background:var(--color-neutral-100);display:flex;align-items:center;justify-content:center;">
+            <div style="width:{{ st.innerDot }}px;height:{{ st.innerDot }}px;border-radius:999px;background:var(--color-accent);"></div>
+          </div>
+        </div>
+      </div>
+    </button>
+    <div style="position:absolute;left:{{ st.labelLeftPct }}%;top:{{ st.labelTopPct }}%;transform:{{ st.labelTransform }};z-index:3;pointer-events:none;text-align:{{ st.labelAlign }};">
+      <div style="font:600 13.5px var(--font-body);color:var(--color-neutral-900);white-space:nowrap;">{{ st.company }}</div>
+      <div style="font:600 11.5px var(--font-body);color:var(--color-accent-700);white-space:nowrap;">{{ st.dates }}</div>
+      <div style="font:400 11px var(--font-body);color:var(--color-neutral-600);white-space:nowrap;">{{ st.place }}</div>
+    </div>
+  </sc-for>
+
+  <!-- BRANCH STOPS -->
+  <sc-for list="{{ internships }}" as="it" hint-placeholder-count="2">
+    <button class="stop-btn" onClick="{{ it.select }}" style="position:absolute;left:{{ it.leftPct }}%;top:{{ it.topPct }}%;transform:translate(-50%,-50%);z-index:3;">
+      <div style="width:17px;height:17px;border-radius:999px;background:var(--color-neutral-100);border:4px solid var(--color-accent-700);box-shadow:var(--shadow-sm);"></div>
+    </button>
+    <div style="position:absolute;left:{{ it.labelLeftPct }}%;top:{{ it.labelTopPct }}%;transform:{{ it.labelTransform }};z-index:3;pointer-events:none;text-align:{{ it.labelAlign }};">
+      <div style="font:600 12.5px var(--font-body);color:var(--color-accent-800);white-space:nowrap;">{{ it.company }}</div>
+      <div style="font:600 11px var(--font-body);color:var(--color-accent-700);white-space:nowrap;">{{ it.dates }}</div>
+      <div style="font:400 10.5px var(--font-body);color:var(--color-neutral-600);white-space:nowrap;">{{ it.place }}</div>
+    </div>
+  </sc-for>
+
+  <!-- STOP DETAIL MODAL -->
+  <sc-if value="{{ selected }}" hint-placeholder-val="{{ false }}">
+    <div onClick="{{ closeModal }}" style="position:fixed;inset:0;background:color-mix(in srgb,var(--color-neutral-900) 20%,transparent);z-index:20;display:flex;align-items:center;justify-content:flex-end;padding-right:min(6vw,72px);">
+      <div onClick="{{ stopProp }}" style="width:min(470px,86vw);max-height:78vh;overflow:auto;background:var(--color-neutral-100);border-radius:var(--radius-lg);box-shadow:var(--shadow-lg);padding:26px 28px;position:relative;animation:modal-in .18s ease-out;">
+        <button class="icon-btn" onClick="{{ closeModal }}" style="position:absolute;top:16px;right:16px;">&times;</button>
+        <div style="font:600 9.5px var(--font-body);letter-spacing:.12em;text-transform:uppercase;color:var(--color-accent-700);margin-bottom:8px;">{{ selected.kicker }}</div>
+        <div style="display:flex;align-items:flex-start;gap:10px;row-gap:6px;flex-wrap:wrap;margin-bottom:10px;padding-right:26px;">
+          <h3 style="font:400 23px/1.25 var(--font-heading);margin:0;">{{ selected.company }}</h3>
+          <sc-if value="{{ selected.current }}" hint-placeholder-val="{{ false }}">
+            <span style="font:600 9.5px var(--font-body);letter-spacing:.08em;text-transform:uppercase;color:var(--color-bg);background:var(--color-accent);border-radius:999px;padding:3px 9px;white-space:nowrap;">You are here</span>
+          </sc-if>
+        </div>
+        <div style="font:600 15px var(--font-body);color:var(--color-accent-700);margin-bottom:3px;">{{ selected.dates }}</div>
+        <div style="font:400 13.5px var(--font-body);color:var(--color-neutral-700);margin-bottom:14px;">{{ selected.role }} &middot; {{ selected.place }}</div>
+        <div style="display:flex;gap:6px;margin-bottom:14px;flex-wrap:wrap;">
+          <sc-for list="{{ selected.tags }}" as="tg" hint-placeholder-count="2">
+            <span style="font:500 11px var(--font-body);padding:3px 10px;border-radius:999px;background:{{ tg.bg }};color:{{ tg.fg }};">{{ tg.label }}</span>
+          </sc-for>
+        </div>
+        <ul style="margin:0;padding-left:18px;color:var(--color-neutral-800);font:400 14px/1.6 var(--font-body);">
+          <sc-for list="{{ selected.highlights }}" as="hl" hint-placeholder-count="2">
+            <li style="margin-bottom:6px;">{{ hl }}</li>
+          </sc-for>
+        </ul>
+      </div>
+    </div>
+  </sc-if>
+
+  <!-- CONTACT MODAL -->
+  <sc-if value="{{ contactOpen }}" hint-placeholder-val="{{ false }}">
+    <div onClick="{{ closeContact }}" style="position:fixed;inset:0;background:color-mix(in srgb,var(--color-neutral-900) 30%,transparent);z-index:21;display:flex;align-items:center;justify-content:center;">
+      <div onClick="{{ stopProp }}" style="width:min(430px,86vw);background:var(--color-neutral-100);border-radius:var(--radius-lg);box-shadow:var(--shadow-lg);padding:28px 30px;position:relative;animation:modal-in .18s ease-out;">
+        <button class="icon-btn" onClick="{{ closeContact }}" style="position:absolute;top:16px;right:16px;">&times;</button>
+        <div style="font:600 10px var(--font-body);letter-spacing:.12em;text-transform:uppercase;color:var(--color-accent-700);margin-bottom:6px;">Next Stop</div>
+        <h2 style="font:400 26px var(--font-heading);margin:0 0 16px;">Contact</h2>
+        <div style="display:flex;gap:10px;flex-wrap:wrap;">
+          <a class="btn btn-primary" href="{{ resumeUrl }}">Resume</a>
+          <a class="btn btn-secondary" href="{{ emailUrl }}">Email</a>
+          <a class="btn btn-secondary" href="{{ linkedinUrl }}">LinkedIn</a>
+          <a class="btn btn-secondary" href="{{ githubUrl }}">GitHub</a>
+        </div>
+      </div>
+    </div>
+  </sc-if>
+
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props="{&quot;zoomOnClick&quot;:{&quot;editor&quot;:&quot;boolean&quot;,&quot;default&quot;:true,&quot;tsType&quot;:&quot;boolean&quot;,&quot;section&quot;:&quot;Map behavior&quot;},&quot;zoomScale&quot;:{&quot;editor&quot;:&quot;range&quot;,&quot;default&quot;:3.2,&quot;min&quot;:1.6,&quot;max&quot;:5,&quot;step&quot;:0.2,&quot;tsType&quot;:&quot;number&quot;,&quot;section&quot;:&quot;Map behavior&quot;},&quot;showGeoLabels&quot;:{&quot;editor&quot;:&quot;boolean&quot;,&quot;default&quot;:true,&quot;tsType&quot;:&quot;boolean&quot;,&quot;section&quot;:&quot;Map behavior&quot;}}">
+const LINE_COLOR = 'var(--color-accent)';
+const VB_W = 1300, VB_H = 660, CX = VB_W / 2, CY = VB_H / 2;
+
+const TAGS = {
+  backend: { bg: 'var(--color-accent-100)', fg: 'var(--color-accent-800)', label: 'Backend' },
+  frontend: { bg: 'var(--color-accent-2-100)', fg: 'var(--color-accent-2-800)', label: 'Frontend' },
+  cloud: { bg: 'rgba(201,154,62,0.16)', fg: '#7a5c1f', label: 'Cloud & DevOps' },
+  data: { bg: 'rgba(181,103,79,0.16)', fg: '#7a3d2b', label: 'Data & Automation' },
+  study: { bg: 'var(--color-neutral-200)', fg: 'var(--color-neutral-800)', label: 'Coursework' },
+};
+
+const STATIONS = [
+  {
+    id: 'hometown', x: 560, y: 110, company: 'Hometown', place: 'Upstate, South Carolina',
+    role: 'Where the line begins', dates: 'Origin station', labelSide: 'right',
+    kicker: 'Main line \u00b7 Stop 1', zoom: { x: 566, y: 96, k: 2.4, label: 'Upstate South Carolina' },
+    tagKeys: [],
+    highlights: ['Placeholder \u2014 tell me your hometown and I\u2019ll name the stop properly.'],
+  },
+  {
+    id: 'college', x: 560, y: 440, company: 'College of Charleston', place: 'Downtown Charleston, SC',
+    role: 'B.S. Computer Science', dates: 'Aug 2019 \u2013 May 2023', labelSide: 'left',
+    kicker: 'Main line \u00b7 Stop 2', zoom: { x: 572, y: 452, k: 3.2, label: 'Downtown Charleston' },
+    tagKeys: ['study'],
+    highlights: ['Placeholder \u2014 confirm your major and add any honors, clubs, or capstone work you want listed here.'],
+  },
+  {
+    id: 'booz', x: 1140, y: 340, company: 'Booz Allen Hamilton', place: 'Daniel Island, SC',
+    role: 'Mid-Level Software Engineer', dates: 'June 2023 \u2013 Present', labelSide: 'below',
+    current: true, kicker: 'Main line \u00b7 Terminus', zoom: { x: 1136, y: 352, k: 3.2, label: 'Daniel Island' },
+    tagKeys: ['frontend', 'backend', 'cloud', 'data'],
+    highlights: [
+      'Engineered an AI-integrated web form (ChatGPT Gov) for claims processors \u2014 24% faster queue time, 11% higher accuracy.',
+      'Built an event-driven Kafka pipeline processing 2,000 veteran claims/day, cutting pre-processing errors 15%.',
+      'Shipped Angular/TypeScript UIs serving 25,000 VA users; trained 50 developers on Ansible, cutting setup time from 20h to 6h.',
+    ],
+  },
+];
+
+const INTERNSHIPS = [
+  {
+    id: 'adaptive', x: 695, y: 495, company: 'Adaptive Biotechnologies', place: 'Remote',
+    role: 'Software Engineer Intern', dates: 'May 2022 \u2013 Aug 2022', labelSide: 'below',
+    kicker: 'Branch line \u00b7 Rejoins the main line', zoom: { x: 695, y: 495, k: 1.5, label: 'Remote' },
+    tagKeys: ['data'],
+    highlights: [
+      'Built Python automation scripts for company-wide KPI reporting pipelines.',
+      'Eliminated 8 hours/week of manual data entry for executive stakeholders.',
+    ],
+  },
+  {
+    id: 'bear', x: 890, y: 265, company: 'Bear Cognition', place: 'Summerville, SC',
+    role: 'Software Engineer Intern', dates: 'Jan 2023 \u2013 May 2023', labelSide: 'above',
+    kicker: 'Branch line \u00b7 Rejoins the main line', zoom: { x: 908, y: 182, k: 3.2, label: 'Summerville' },
+    tagKeys: ['cloud', 'backend'],
+    highlights: [
+      'Led enterprise-wide cloud migration of 12 production services from GCP to AWS, cutting monthly infra costs 10%.',
+      'Migrated 5 relational SQL databases and refactored cloud functions to serverless AWS Lambda, improving response times 25%.',
+    ],
+  },
+];
+
+const pct = (v, total) => (v / total) * 100;
+
+function placeLabel(s) {
+  const xPct = pct(s.x, VB_W), yPct = pct(s.y, VB_H);
+  const side = s.labelSide || 'below';
+  if (side === 'right') return { labelLeftPct: xPct + 1.6, labelTopPct: yPct, labelTransform: 'translate(0,-50%)', labelAlign: 'left' };
+  if (side === 'left') return { labelLeftPct: xPct - 1.6, labelTopPct: yPct, labelTransform: 'translate(-100%,-50%)', labelAlign: 'right' };
+  const edge = xPct < 18 ? 'left' : xPct > 82 ? 'right' : 'center';
+  const h = edge === 'left' ? '0%' : edge === 'right' ? '-100%' : '-50%';
+  const above = side === 'above';
+  return {
+    labelLeftPct: xPct,
+    labelTopPct: yPct + (above ? -4.4 : 4.4),
+    labelTransform: `translate(${h}, ${above ? '-100%' : '0%'})`,
+    labelAlign: edge,
+  };
+}
+
+class Component extends DCLogic {
+  state = { selectedId: null, contactOpen: false, zoom: null };
+
+  pick(item) {
+    const zoomOn = this.props.zoomOnClick ?? true;
+    const k = item.zoom.k > 1 ? (this.props.zoomScale ?? 3.2) * (item.zoom.k / 3.2) : item.zoom.k;
+    this.setState({ selectedId: item.id, zoom: zoomOn ? { ...item.zoom, k } : null });
+  }
+
+  renderVals() {
+    const decorate = (list, kind) => list.map(s => ({
+      ...s,
+      ...placeLabel(s),
+      leftPct: pct(s.x, VB_W), topPct: pct(s.y, VB_H),
+      circleSize: s.current ? 40 : 34,
+      innerDot: s.current ? 11 : 9,
+      dotAnim: s.current ? 'pulse-dot 2s ease-in-out infinite' : 'none',
+      select: () => this.pick(s),
+      kind,
+    }));
+
+    const stations = decorate(STATIONS, 'main');
+    const internships = decorate(INTERNSHIPS, 'branch');
+
+    const all = [...STATIONS, ...INTERNSHIPS];
+    const hit = all.find(s => s.id === this.state.selectedId);
+    const selected = hit ? {
+      company: hit.company, role: hit.role, dates: hit.dates, place: hit.place,
+      kicker: hit.kicker, current: !!hit.current,
+      tags: (hit.tagKeys || []).map(k => TAGS[k]),
+      highlights: hit.highlights,
+    } : null;
+
+    const z = this.state.zoom;
+    // focus left of centre so the detail card (anchored right) never covers the zoomed area
+    const FX = VB_W * 0.33, FY = VB_H * 0.5;
+    const mapTransform = z
+      ? `translate(${FX - z.k * z.x} ${FY - z.k * z.y}) scale(${z.k})`
+      : 'translate(0 0) scale(1)';
+    const k = z ? z.k : 1;
+
+    return {
+      name: 'Thomas Griffin',
+      title: 'Software Engineer',
+      tagline: 'Upstate roots, Lowcountry lines \u2014 riding from Charleston to Daniel Island.',
+      lineColor: LINE_COLOR,
+      stations, internships, selected,
+      mapTransform,
+      geoLabelOpacity: (this.props.showGeoLabels ?? true) ? 0.55 : 0,
+      geoFontSm: 13 / k,
+      geoFontLg: 17 / k,
+      geoTrackLg: 5 / k,
+      regionLabel: z ? z.label : null,
+      mainLinePoints: '560,110 560,440 1040,440 1140,340',
+      adaptiveBranch: '600,440 650,495 740,495 790,440',
+      bearBranch: '820,440 860,395 860,305 890,265 920,305 920,395 980,440',
+      contactOpen: this.state.contactOpen,
+      openContact: () => this.setState({ contactOpen: true }),
+      closeContact: () => this.setState({ contactOpen: false }),
+      closeModal: () => this.setState({ selectedId: null, zoom: null }),
+      resetView: () => this.setState({ zoom: null }),
+      stopProp: e => e.stopPropagation(),
+      resumeUrl: '#',
+      emailUrl: 'mailto:ltgriffin01@gmail.com',
+      linkedinUrl: '#',
+      githubUrl: '#',
+    };
+  }
+}
+</script>
+</body>
+</html>

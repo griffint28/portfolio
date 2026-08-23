@@ -1,0 +1,630 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <script src="./support.js"></script>
+</head>
+
+<body>
+  <x-dc>
+    <helmet>
+      <link rel="stylesheet" href="_ds/organic-745a8e6d-2071-4912-904e-4bff3ece9f35/styles.css">
+      <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
+        integrity="sha384-sHL9NAb7lN7rfvG5lfHpm643Xkcjzp4jFvuavGOndn6pjVqS6ny56CAt3nsEVT4H" crossorigin="anonymous">
+      <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"
+        integrity="sha384-cxOPjt7s7Iz04uaHJceBmS+qpjv2JkIHNVcuOrM+YHwZOmJGBXI00mdUXEq65HTH"
+        crossorigin="anonymous"></script>
+      <style>
+        html,
+        body {
+          margin: 0;
+          height: 100%;
+          overflow: hidden;
+          background: var(--color-bg);
+          color: var(--color-text);
+          font-family: var(--font-body);
+        }
+
+        a {
+          color: var(--color-accent-700);
+          text-decoration: none;
+        }
+
+        a:hover {
+          color: var(--color-accent-900);
+          text-decoration: underline;
+        }
+
+        /* tile treatment is driven from the logic class via --tilefx / --water */
+        .leaflet-tile-pane {
+          filter: var(--tilefx, none);
+        }
+
+        .leaflet-container {
+          background: var(--water, #dfe4dd);
+          font-family: var(--font-body);
+        }
+
+        .leaflet-control-attribution {
+          background: color-mix(in srgb, var(--color-neutral-100) 82%, transparent) !important;
+          font: 400 10px var(--font-body) !important;
+          color: var(--color-neutral-600) !important;
+          border-radius: 999px 0 0 0;
+          padding: 3px 8px !important;
+        }
+
+        .leaflet-control-zoom {
+          border: none !important;
+          box-shadow: var(--shadow-sm) !important;
+          border-radius: 999px !important;
+          overflow: hidden;
+        }
+
+        .leaflet-control-zoom a {
+          background: var(--color-neutral-100) !important;
+          color: var(--color-neutral-800) !important;
+          border: none !important;
+          width: 32px !important;
+          height: 32px !important;
+          line-height: 32px !important;
+          font-size: 17px !important;
+        }
+
+        .leaflet-control-zoom a:hover {
+          background: var(--color-accent-100) !important;
+          color: var(--color-accent-900) !important;
+        }
+
+        .leaflet-bar a:focus-visible {
+          outline: 2px solid var(--color-accent);
+          outline-offset: 2px;
+        }
+
+        .stop {
+          cursor: pointer;
+          position: relative;
+          box-sizing: border-box;
+          border-radius: 999px;
+          background: var(--color-neutral-100);
+          box-shadow: 0 1px 3px rgba(32, 30, 29, .28);
+        }
+
+        .stop:focus-visible {
+          outline: 2px solid var(--color-accent);
+          outline-offset: 3px;
+        }
+
+        .stop.current {
+          animation: pulse-dot 2.4s ease-in-out infinite;
+        }
+
+        .stop.current::before {
+          content: "";
+          position: absolute;
+          inset: -6px;
+          border-radius: 999px;
+          background: var(--line-main);
+          animation: pulse-ring 2.4s cubic-bezier(.2, .6, .4, 1) infinite;
+          z-index: -1;
+        }
+
+        @keyframes pulse-ring {
+          0% {
+            transform: scale(.8);
+            opacity: .55
+          }
+
+          70%,
+          100% {
+            transform: scale(2);
+            opacity: 0
+          }
+        }
+
+        @keyframes pulse-dot {
+
+          0%,
+          100% {
+            transform: scale(1)
+          }
+
+          50% {
+            transform: scale(1.1)
+          }
+        }
+
+        @keyframes card-in {
+          from {
+            opacity: 0;
+            transform: translateY(8px) scale(.98)
+          }
+
+          to {
+            opacity: 1;
+            transform: none
+          }
+        }
+
+        .stop-label {
+          background: color-mix(in srgb, var(--label-bg, #f5ead8) 88%, transparent);
+          border: none;
+          box-shadow: none;
+          padding: 3px 8px;
+          margin: 0;
+          white-space: nowrap;
+          border-radius: 10px;
+        }
+
+        .stop-label::before {
+          display: none;
+        }
+
+        .stop-label .sl-name {
+          font: 600 13.5px var(--font-body);
+          color: var(--color-neutral-900);
+        }
+
+        .stop-label .sl-dates {
+          font: 600 11.5px var(--font-body);
+          color: var(--line-main);
+        }
+
+        .stop-label .sl-place {
+          font: 400 11px var(--font-body);
+          color: var(--color-neutral-700);
+        }
+
+        .stop-label.intern .sl-dates {
+          color: var(--line-intern);
+        }
+
+        .stop-label.minor {
+          padding: 2px 7px;
+        }
+
+        .stop-label.minor .sl-name {
+          font-weight: 500;
+          font-size: 12px;
+          color: var(--color-neutral-700);
+        }
+
+        .hide-labels .stop-label {
+          display: none;
+        }
+      </style>
+    </helmet>
+
+    <div style="position:fixed;inset:0;background:var(--color-bg);">
+      <div ref="{{ mapRef }}" style="position:absolute;inset:0;"></div>
+
+      <div
+        style="position:absolute;bottom:24px;left:24px;z-index:600;max-width:300px;padding:16px 18px;background:var(--color-neutral-100);border:1px solid var(--color-neutral-300);border-radius:var(--radius-lg);box-shadow:var(--shadow-md);overflow:hidden;">
+        <div
+          style="position:absolute;top:0;left:0;right:0;height:5px;background:linear-gradient(90deg,var(--line-main) 0 60%,var(--line-intern) 60% 100%);">
+        </div>
+        <div
+          style="font:600 9.5px/1 var(--font-body);letter-spacing:.13em;text-transform:uppercase;color:var(--color-accent-700);">
+          Lowcountry Transit Authority</div>
+        <h1 style="font:400 26px/1.1 var(--font-heading);margin:8px 0 5px;">Thomas Griffin</h1>
+        <div style="font:600 13px/1.3 var(--font-body);color:var(--color-accent-700);margin-bottom:6px;">Software
+          Engineer</div>
+        <p style="font:400 12px/1.45 var(--font-body);color:var(--color-neutral-700);margin:0;text-wrap:pretty;">Two
+          lines across the real Lowcountry, interchanging at the College of Charleston.</p>
+      </div>
+
+      <div
+        style="position:absolute;top:24px;right:24px;z-index:600;padding:12px 15px;background:var(--color-neutral-100);border:1px solid var(--color-neutral-300);border-radius:var(--radius-md);box-shadow:var(--shadow-sm);">
+        <div
+          style="font:600 9.5px/1 var(--font-body);letter-spacing:.1em;text-transform:uppercase;color:var(--color-neutral-600);margin-bottom:9px;">
+          Map Key</div>
+        <div style="display:flex;flex-direction:column;gap:8px;">
+          <div
+            style="display:flex;align-items:center;gap:8px;font:400 12px var(--font-body);color:var(--color-neutral-800);">
+            <span
+              style="width:22px;height:5px;border-radius:999px;flex:0 0 auto;background:var(--line-main);"></span>Career
+            line</div>
+          <div
+            style="display:flex;align-items:center;gap:8px;font:400 12px var(--font-body);color:var(--color-neutral-800);">
+            <span
+              style="width:22px;height:5px;border-radius:999px;flex:0 0 auto;background:var(--line-intern);"></span>Internship
+            line</div>
+          <div
+            style="display:flex;align-items:center;gap:8px;font:400 12px var(--font-body);color:var(--color-neutral-800);">
+            <span
+              style="width:12px;height:12px;border-radius:999px;flex:0 0 auto;box-sizing:border-box;background:#fff;border:3px solid #660000;box-shadow:0 0 0 2px #bfa87c;"></span>Interchange
+            (CofC)</div>
+          <div
+            style="display:flex;align-items:center;gap:8px;font:400 12px var(--font-body);color:var(--color-neutral-800);">
+            <span
+              style="width:11px;height:11px;border-radius:999px;flex:0 0 auto;background:var(--line-main);box-shadow:0 0 0 3px var(--color-accent-200);"></span>You
+            are here</div>
+        </div>
+        <div style="border-top:1px solid var(--color-neutral-300);margin:10px 0 8px;"></div>
+        <div style="font:500 11px/1.4 var(--font-body);color:var(--color-neutral-600);max-width:152px;">Tap a stop to
+          fly the map to that part of the Lowcountry.</div>
+      </div>
+
+      <sc-if value="{{ zoomed }}" hint-placeholder-val="{{ false }}">
+        <div
+          style="position:absolute;left:50%;top:22px;transform:translateX(-50%);z-index:900;display:flex;align-items:center;gap:10px;background:var(--color-neutral-100);border:1px solid var(--color-neutral-300);border-radius:999px;padding:7px 7px 7px 15px;box-shadow:var(--shadow-md);">
+          <span
+            style="font:600 9.5px/1 var(--font-body);letter-spacing:.13em;text-transform:uppercase;color:var(--color-accent-700);">Zoomed
+            to</span>
+          <span style="font:400 15px var(--font-heading);color:var(--color-neutral-900);white-space:nowrap;">{{
+            captionLabel }}</span>
+          <button onClick="{{ resetView }}" aria-label="Back to the full coast"
+            style="border:none;background:var(--color-neutral-200);cursor:pointer;width:30px;height:30px;border-radius:999px;display:grid;place-items:center;font-size:15px;color:var(--color-neutral-700);">&times;</button>
+        </div>
+      </sc-if>
+
+      <button onClick="{{ openContact }}"
+        style="position:absolute;left:50%;bottom:24px;transform:translateX(-50%);z-index:600;font:600 12px var(--font-body);color:var(--color-bg);background:var(--line-main);border:none;border-radius:999px;padding:10px 17px;cursor:pointer;box-shadow:var(--shadow-sm);">Next
+        Stop: Contact &rarr;</button>
+
+      <sc-if value="{{ detailOpen }}" hint-placeholder-val="{{ false }}">
+        <div onClick="{{ resetView }}"
+          style="position:fixed;inset:0;z-index:1000;display:flex;align-items:center;justify-content:flex-end;padding-right:min(6vw,72px);background:color-mix(in srgb,var(--color-neutral-900) 16%,transparent);">
+          <div onClick="{{ swallow }}"
+            style="width:min(450px,86vw);max-height:76vh;overflow:auto;position:relative;background:var(--color-neutral-100);border-radius:var(--radius-lg);box-shadow:var(--shadow-lg);padding:26px 28px;animation:card-in .18s ease-out;">
+            <button onClick="{{ resetView }}" aria-label="Close"
+              style="position:absolute;top:16px;right:16px;border:none;background:var(--color-neutral-200);cursor:pointer;width:30px;height:30px;border-radius:999px;display:grid;place-items:center;font-size:15px;color:var(--color-neutral-700);">&times;</button>
+            <div
+              style="font:600 9.5px/1 var(--font-body);letter-spacing:.13em;text-transform:uppercase;color:var(--color-accent-700);">
+              {{ activeKicker }}</div>
+            <div
+              style="display:flex;align-items:flex-start;gap:10px;row-gap:6px;flex-wrap:wrap;margin:8px 0 0;padding-right:26px;">
+              <h3 style="font:400 23px/1.25 var(--font-heading);margin:0;">{{ activeName }}</h3>
+              <sc-if value="{{ activeCurrent }}" hint-placeholder-val="{{ false }}">
+                <span
+                  style="font:600 9.5px var(--font-body);letter-spacing:.08em;text-transform:uppercase;color:var(--color-bg);background:var(--line-main);border-radius:999px;padding:3px 9px;white-space:nowrap;">You
+                  are here</span>
+              </sc-if>
+            </div>
+            <div style="font:600 15px var(--font-body);color:var(--color-accent-700);margin:10px 0 3px;">{{ activeDates
+              }}</div>
+            <div style="font:400 13.5px var(--font-body);color:var(--color-neutral-700);margin-bottom:14px;">{{
+              activeMeta }}</div>
+            <div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:14px;">
+              <sc-for list="{{ activeTags }}" as="t" hint-placeholder-count="2">
+                <span
+                  style="font:500 11px var(--font-body);padding:3px 10px;border-radius:999px;background:{{ t.bg }};color:{{ t.fg }};">{{
+                  t.label }}</span>
+              </sc-for>
+            </div>
+            <ul style="margin:0;padding-left:18px;color:var(--color-neutral-800);font:400 14px/1.6 var(--font-body);">
+              <sc-for list="{{ activeHighlights }}" as="h" hint-placeholder-count="3">
+                <li style="margin-bottom:6px;">{{ h }}</li>
+              </sc-for>
+            </ul>
+          </div>
+        </div>
+      </sc-if>
+
+      <sc-if value="{{ contactOpen }}" hint-placeholder-val="{{ false }}">
+        <div onClick="{{ closeContact }}"
+          style="position:fixed;inset:0;z-index:1000;display:flex;align-items:center;justify-content:center;background:color-mix(in srgb,var(--color-neutral-900) 16%,transparent);">
+          <div onClick="{{ swallow }}"
+            style="width:min(430px,86vw);position:relative;background:var(--color-neutral-100);border-radius:var(--radius-lg);box-shadow:var(--shadow-lg);padding:26px 28px;animation:card-in .18s ease-out;">
+            <button onClick="{{ closeContact }}" aria-label="Close"
+              style="position:absolute;top:16px;right:16px;border:none;background:var(--color-neutral-200);cursor:pointer;width:30px;height:30px;border-radius:999px;display:grid;place-items:center;font-size:15px;color:var(--color-neutral-700);">&times;</button>
+            <div
+              style="font:600 9.5px/1 var(--font-body);letter-spacing:.13em;text-transform:uppercase;color:var(--color-accent-700);">
+              Next Stop</div>
+            <h2 style="font:400 26px var(--font-heading);margin:8px 0 16px;">Contact</h2>
+            <div style="display:flex;gap:10px;flex-wrap:wrap;">
+              <a href="#"
+                style="font:600 12px var(--font-body);color:var(--color-bg);background:var(--line-main);border-radius:999px;padding:10px 17px;">Resume</a>
+              <a href="mailto:ltgriffin01@gmail.com"
+                style="font:600 12px var(--font-body);color:var(--color-neutral-800);background:var(--color-neutral-200);border-radius:999px;padding:10px 17px;">Email</a>
+              <a href="#"
+                style="font:600 12px var(--font-body);color:var(--color-neutral-800);background:var(--color-neutral-200);border-radius:999px;padding:10px 17px;">LinkedIn</a>
+              <a href="#"
+                style="font:600 12px var(--font-body);color:var(--color-neutral-800);background:var(--color-neutral-200);border-radius:999px;padding:10px 17px;">GitHub</a>
+            </div>
+          </div>
+        </div>
+      </sc-if>
+    </div>
+  </x-dc>
+  <script type="text/x-dc" data-dc-script
+    data-props="{&quot;landTone&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;Paper&quot;,&quot;Sand&quot;,&quot;Clay&quot;,&quot;Slate&quot;],&quot;default&quot;:&quot;Sand&quot;,&quot;tsType&quot;:&quot;string&quot;,&quot;section&quot;:&quot;Basemap&quot;},&quot;landDepth&quot;:{&quot;editor&quot;:&quot;range&quot;,&quot;min&quot;:0,&quot;max&quot;:100,&quot;step&quot;:1,&quot;default&quot;:70,&quot;tsType&quot;:&quot;number&quot;,&quot;section&quot;:&quot;Basemap&quot;},&quot;careerColor&quot;:{&quot;editor&quot;:&quot;color&quot;,&quot;options&quot;:[&quot;#b2622d&quot;,&quot;#660000&quot;,&quot;#a33b2a&quot;,&quot;#8c491a&quot;],&quot;default&quot;:&quot;#b2622d&quot;,&quot;tsType&quot;:&quot;string&quot;,&quot;section&quot;:&quot;Lines&quot;},&quot;internColor&quot;:{&quot;editor&quot;:&quot;color&quot;,&quot;options&quot;:[&quot;#56633f&quot;,&quot;#8a7440&quot;,&quot;#3f6f66&quot;,&quot;#4b5f8c&quot;],&quot;default&quot;:&quot;#56633f&quot;,&quot;tsType&quot;:&quot;string&quot;,&quot;section&quot;:&quot;Lines&quot;},&quot;lineWeight&quot;:{&quot;editor&quot;:&quot;range&quot;,&quot;min&quot;:5,&quot;max&quot;:14,&quot;step&quot;:1,&quot;default&quot;:9,&quot;tsType&quot;:&quot;number&quot;,&quot;section&quot;:&quot;Lines&quot;},&quot;showLabels&quot;:{&quot;editor&quot;:&quot;boolean&quot;,&quot;default&quot;:true,&quot;tsType&quot;:&quot;boolean&quot;,&quot;section&quot;:&quot;Lines&quot;}}">
+const TAGS = {
+  backend:{label:'Backend',bg:'var(--color-accent-100)',fg:'var(--color-accent-800)'},
+  frontend:{label:'Frontend',bg:'var(--color-accent-2-100)',fg:'var(--color-accent-2-800)'},
+  cloud:{label:'Cloud & DevOps',bg:'rgba(201,154,62,.16)',fg:'#7a5c1f'},
+  data:{label:'Data & Automation',bg:'rgba(181,103,79,.16)',fg:'#7a3d2b'},
+  study:{label:'Coursework',bg:'var(--color-neutral-200)',fg:'var(--color-neutral-800)'}
+};
+
+const STOPS = [
+  { id:'bear', line:'intern', kind:'terminus', at:[33.0185,-80.1756], dir:'right',
+    name:'Bear Cognition', place:'Summerville, SC', role:'Software Engineer Intern', dates:'Jan 2023 – May 2023',
+    kicker:'Internship line · Northern terminus', fly:{center:[33.0185,-80.1756], zoom:14, label:'Summerville'},
+    tags:['cloud','backend'], highlights:[
+      'Led enterprise-wide cloud migration of 12 production services from GCP to AWS, cutting monthly infra costs 10%.',
+      'Migrated 5 relational SQL databases and refactored cloud functions to serverless AWS Lambda, improving response times 25%.'] },
+  { id:'hometown', line:'main', kind:'terminus', at:[33.0400,-80.4300], dir:'right',
+    name:'Hometown', place:'Upstate, South Carolina', role:'Where the line begins', dates:'Origin station',
+    kicker:'Career line · Western terminus', fly:{center:[34.8526,-82.3940], zoom:10, label:'Upstate South Carolina'},
+    tags:[], highlights:['Placeholder — tell me your hometown and I’ll name this stop properly and drop the pin on the real town.'] },
+  { id:'college', line:'main', kind:'interchange', at:[32.7845,-79.9375], dir:'left', off:[-26,30],
+    name:'College of Charleston', place:'Downtown Charleston, SC', role:'B.S. Computer Science', dates:'Aug 2019 – May 2023',
+    kicker:'Interchange · Career line & Internship line', fly:{center:[32.7845,-79.9375], zoom:15, label:'Downtown Charleston'},
+    tags:['study'], highlights:[
+      'The interchange: both internships branch off these four years, and the career line carries on from here.',
+      'Placeholder — confirm your major and add any honors, clubs, or capstone work you want listed here.'] },
+  { id:'mtp', line:'main', kind:'minor', at:[32.8075,-79.8720], dir:'right',
+    name:'Mount Pleasant', place:'Mount Pleasant, SC', role:'Waypoint', dates:'On the line',
+    kicker:'Career line · Waypoint', fly:{center:[32.8075,-79.8720], zoom:14, label:'Mount Pleasant'},
+    tags:[], highlights:[
+      'The career line crosses the Ravenel Bridge here, then follows Long Point Road north to the Wando crossing.',
+      'Placeholder — if you live here, or something belongs at this stop, tell me and I’ll promote it to a full station.'] },
+  { id:'booz', line:'main', kind:'terminus', at:[32.8595,-79.9120], dir:'top', current:true,
+    name:'Booz Allen Hamilton', place:'Daniel Island, SC', role:'Mid-Level Software Engineer', dates:'June 2023 – Present',
+    kicker:'Career line · Eastern terminus', fly:{center:[32.8595,-79.9120], zoom:15, label:'Daniel Island'},
+    tags:['frontend','backend','cloud','data'], highlights:[
+      'Engineered an AI-integrated web form (ChatGPT Gov) for claims processors — 24% faster queue time, 11% higher accuracy.',
+      'Built an event-driven Kafka pipeline processing 2,000 veteran claims/day, cutting pre-processing errors 15%.',
+      'Shipped Angular/TypeScript UIs serving 25,000 VA users; trained 50 developers on Ansible, cutting setup time from 20h to 6h.'] },
+  { id:'adaptive', line:'intern', kind:'terminus', at:[32.6550,-79.7450], dir:'top',
+    name:'Adaptive Biotechnologies', place:'Remote — Seattle, WA', role:'Software Engineer Intern', dates:'May 2022 – Aug 2022',
+    kicker:'Internship line · Offshore terminus', fly:{center:[47.6205,-122.3493], zoom:12, label:'Seattle, WA'},
+    tags:['data'], highlights:[
+      'Built Python automation scripts for company-wide KPI reporting pipelines.',
+      'Eliminated 8 hours/week of manual data entry for executive stakeholders.'] }
+];
+
+/* Career line — real road corridors, on land except at named bridges. Down the
+   US-17A/SC-61 corridor from the northwest, then a western approach along the
+   Savannah Hwy (US-17) and over the Ashley River bridge into downtown — kept
+   clear of the intern line's I-26 descent; out of CofC up East Bay, over the
+   Ravenel, north up Long Point Road, then I-526 over the Wando. */
+const CAREER = [
+  [33.1500,-80.4300],
+  [33.0400,-80.4300,1],
+  [32.9231,-80.4300,1],          // continue south down the US-17A / SC-61 corridor
+  [32.7845,-80.2649],          // 45° SE onto the Savannah Hwy (US-17) corridor
+  [32.7845,-79.9375,1],        // due east through West Ashley, over the US-17 Ashley bridge
+  [32.8075,-79.9103],          // 45° NE up East Bay to the Ravenel's west tower
+  [32.8075,-79.8720,1],        // due east over the Ravenel into Mount Pleasant
+  [32.8259,-79.8720],          // due north up Long Point Road
+  [32.8595,-79.9120,1]         // 45° NW over the Wando (I-526) to Daniel Island
+];
+/* Internship line — one unbroken 45° I-26 run from Summerville down the Neck to
+   where the interstate ends at Meeting St, then Meeting St south through CofC to
+   the Battery, then the map's only true water leg: out through the harbour mouth. */
+const INTERN = [
+  [33.0185,-80.1756,1],
+  [32.8186,-79.9375],          // one unbroken 45° SE run: I-26 from Summerville down the Neck
+  [32.7845,-79.9375,1],        // I-26 ends at Meeting St — due south into CofC
+  [32.7690,-79.9375],          // Meeting St on to the Battery — last land
+  [32.6550,-79.8018],          // 45° SE through the harbour mouth to open ocean
+  [32.6550,-79.7450,1]
+];
+
+const HOME_BOUNDS = [[32.628,-80.470],[33.058,-79.690]];
+/* College of Charleston brand: maroon ring, gold halo, white core */
+const COFC = { maroon:'#660000', gold:'#bfa87c' };
+/* asymmetric fit reserves the chrome: map key top-right, zoom control bottom-right,
+   so terminus labels never grow under a panel */
+const FIT = { paddingTopLeft:[40,70], paddingBottomRight:[196,64] };
+
+/* Octolinear routing. Control points are authored as true 0°/45°/90° runs in a
+   screen-square space (Y scaled by cos(lat) so a 45° leg really looks 45°), then
+   every non-station corner is replaced by a fixed-radius arc — straight lines,
+   defined corners, stations exactly on the line. A third element marks a station:
+   those vertices are never moved or rounded. */
+const KLAT = Math.cos(32.85 * Math.PI / 180);
+const toXY = p => [p[1], p[0] / KLAT];
+const toLL = q => [q[1] * KLAT, q[0]];
+const CORNER_R = 0.02;
+
+function route(pts, R){
+  R = R || CORNER_R;
+  const P = pts.map(toXY);
+  const len = (a,b) => Math.hypot(b[0]-a[0], b[1]-a[1]);
+  const unit = (a,b) => { const d = len(a,b) || 1; return [(b[0]-a[0])/d, (b[1]-a[1])/d]; };
+  const out = [P[0]];
+  for (let i = 1; i < P.length - 1; i++){
+    if (pts[i][2]){ out.push(P[i]); continue; }
+    const v = P[i], din = unit(P[i-1], v), dout = unit(v, P[i+1]);
+    const r = Math.min(R, len(P[i-1], v) * 0.5, len(v, P[i+1]) * 0.5);
+    const a = [v[0] - din[0]*r, v[1] - din[1]*r];
+    const b = [v[0] + dout[0]*r, v[1] + dout[1]*r];
+    out.push(a);
+    for (let s = 1; s < 12; s++){
+      const t = s/12, u = 1-t;
+      out.push([u*u*a[0] + 2*u*t*v[0] + t*t*b[0], u*u*a[1] + 2*u*t*v[1] + t*t*b[1]]);
+    }
+    out.push(b);
+  }
+  out.push(P[P.length-1]);
+  return out.map(toLL);
+}
+
+/* Land treatments. Each preset is a tile-filter recipe; `depth` then pulls the
+   paper down off pure white and firms up the contrast between land and water. */
+const TONES = {
+  Paper: { sepia:.18, sat:1.05, hue:-6,  bright:1.04, con:.98,  water:'#d3dcdb', label:'#f7efe0' },
+  Sand:  { sepia:.50, sat:1.30, hue:-8,  bright:.965, con:1.10, water:'#a9bab7', label:'#e8d8b9' },
+  Clay:  { sepia:.55, sat:1.35, hue:-12, bright:1.00, con:1.10, water:'#b3c2c0', label:'#ecdcc2' },
+  Slate: { sepia:.10, sat:.70,  hue:8,   bright:1.02, con:1.12, water:'#c2cdcd', label:'#eceae4' }
+};
+
+class Component extends DCLogic {
+  state = { activeId:null, contactOpen:false };
+  mapRef = React.createRef();
+
+  componentDidMount(){ this.boot(); }
+  componentDidUpdate(){ this.applyTheme(); }
+
+  boot = () => {
+    if (!window.L || !this.mapRef.current){ setTimeout(this.boot, 60); return; }
+    this.initMap();
+  };
+
+  theme(){
+    const t = TONES[this.props.landTone] || TONES.Sand;
+    const depth = (this.props.landDepth ?? 70) / 100;
+    return {
+      career: this.props.careerColor || '#b2622d',
+      intern: this.props.internColor || '#56633f',
+      weight: this.props.lineWeight ?? 9,
+      /* contrast before brightness: separate land from water first, then pull the paper down */
+      filter: `sepia(${t.sepia}) saturate(${(t.sat + depth*.35).toFixed(2)}) hue-rotate(${t.hue}deg) `
+            + `contrast(${(t.con + depth*.10).toFixed(3)}) brightness(${(t.bright - depth*.34).toFixed(3)})`,
+      water: t.water,
+      label: t.label
+    };
+  }
+
+  applyTheme(){
+    if (!this.map) return;
+    const th = this.theme();
+    const root = document.documentElement.style;
+    root.setProperty('--tilefx', th.filter);
+    root.setProperty('--water', th.water);
+    root.setProperty('--label-bg', th.label);
+    root.setProperty('--line-main', th.career);
+    root.setProperty('--line-intern', th.intern);
+    const casing = getComputedStyle(document.documentElement).getPropertyValue('--color-neutral-100').trim() || '#f9f4ed';
+    this.internCase.setStyle({ color:casing, weight: th.weight + 5 });
+    this.careerCase.setStyle({ color:casing, weight: th.weight + 6 });
+    this.internLine.setStyle({ color: th.intern, weight: th.weight - 1 });
+    this.careerLine.setStyle({ color: th.career, weight: th.weight });
+    STOPS.forEach(s => {
+      const el = this.markers[s.id].getElement();
+      const dot = el && el.querySelector('.stop');
+      if (dot && s.kind !== 'interchange') dot.style.borderColor = s.line === 'intern' ? th.intern : th.career;
+    });
+    this.map.getContainer().classList.toggle('hide-labels', this.props.showLabels === false);
+  }
+
+  initMap(){
+    const map = L.map(this.mapRef.current, { zoomControl:false, zoomSnap:.25, minZoom:8, maxZoom:17 });
+    this.map = map;
+    L.tileLayer('https://{s}.basemaps.cartocdn.com/light_nolabels/{z}/{x}/{y}{r}.png',{
+      subdomains:'abcd', attribution:'© OpenStreetMap contributors © CARTO', maxZoom:19, detectRetina:true
+    }).addTo(map);
+    this.labelsLayer = L.tileLayer('https://{s}.basemaps.cartocdn.com/light_only_labels/{z}/{x}/{y}{r}.png',{
+      subdomains:'abcd', maxZoom:19, detectRetina:true
+    });
+    L.control.zoom({ position:'bottomright' }).addTo(map);
+    map.fitBounds(HOME_BOUNDS, FIT);
+    map.on('resize', () => { if (!this.state.activeId){ this.unlock(); map.fitBounds(HOME_BOUNDS, FIT); this.lockHome(); } });
+
+    const careerC = route(CAREER), internC = route(INTERN);
+    this.lines = L.layerGroup().addTo(map);
+    const base = { opacity:1, lineCap:'round', lineJoin:'round' };
+    this.internCase = L.polyline(internC, base).addTo(this.lines);
+    this.careerCase = L.polyline(careerC, base).addTo(this.lines);
+    this.internLine = L.polyline(internC, base).addTo(this.lines);
+    this.careerLine = L.polyline(careerC, base).addTo(this.lines);
+
+    const ink = getComputedStyle(document.documentElement).getPropertyValue('--color-neutral-800').trim() || '#474238';
+    this.markers = {};
+    STOPS.forEach(s => {
+      const isX = s.kind === 'interchange';
+      const ring = isX ? COFC.maroon : (s.line === 'intern' ? '#56633f' : '#b2622d');
+      const size = isX ? 32 : s.kind === 'minor' ? 15 : 27;
+      const bw = isX ? 8 : s.kind === 'minor' ? 4 : 7;
+      const shadow = isX ? `box-shadow:0 0 0 4px ${COFC.gold},0 1px 4px rgba(32,30,29,.3);background:#fff;` : '';
+      const html = `<div class="stop${s.current ? ' current' : ''}" role="button" tabindex="0" aria-label="${s.name}" style="width:${size}px;height:${size}px;border:${bw}px solid ${ring};${shadow}"></div>`;
+      const marker = L.marker(s.at, {
+        icon: L.divIcon({ html, className:'', iconSize:[size,size], iconAnchor:[size/2,size/2] }),
+        keyboard:true, riseOnHover:true, zIndexOffset: s.current ? 500 : (s.kind === 'minor' ? 200 : 300)
+      }).addTo(map);
+      const body = s.kind === 'minor'
+        ? `<div class="sl-name">${s.name}</div>`
+        : `<div class="sl-name">${s.name}</div><div class="sl-dates">${s.dates}</div><div class="sl-place">${s.place}</div>`;
+      const auto = s.dir === 'left' ? [-size/2-6,0] : s.dir === 'right' ? [size/2+6,0]
+        : s.dir === 'top' ? [0,-size/2-6] : [0,size/2+6];
+      marker.bindTooltip(body, {
+        permanent:true, direction:s.dir, opacity:1,
+        className:`stop-label ${s.line}${s.kind === 'minor' ? ' minor' : ''}`,
+        offset: s.off || auto
+      });
+      marker.on('click', () => this.select(s.id));
+      marker.on('keypress', e => { if (e.originalEvent.key === 'Enter' || e.originalEvent.key === ' ') this.select(s.id); });
+      this.markers[s.id] = marker;
+    });
+
+    this.onKey = e => {
+      if (e.key !== 'Escape') return;
+      if (this.state.contactOpen) this.setState({ contactOpen:false });
+      else if (this.state.activeId) this.resetView();
+    };
+    document.addEventListener('keydown', this.onKey);
+    this.applyTheme();
+    this.lockHome();
+  }
+
+  componentWillUnmount(){
+    document.removeEventListener('keydown', this.onKey);
+    if (this.map) this.map.remove();
+  }
+
+  /* The landing view is the floor: you can zoom in, never out past it, and never pan
+     off the Lowcountry. Unlocked only while a stop detour is in flight. */
+  lockHome = () => {
+    if (!this.map) return;
+    this.map.setMinZoom(this.map.getZoom());
+    this.map.setMaxBounds(L.latLngBounds(HOME_BOUNDS).pad(0.06));
+  };
+  unlock = () => {
+    if (!this.map) return;
+    this.map.setMaxBounds(null);
+    this.map.setMinZoom(3);
+  };
+
+  select = id => {
+    const s = STOPS.find(x => x.id === id);
+    if (!s || !this.map) return;
+    this.unlock();
+    this.map.removeLayer(this.lines);
+    STOPS.forEach(o => { if (o.id !== id) this.map.removeLayer(this.markers[o.id]); });
+    if (!this.map.hasLayer(this.labelsLayer)) this.labelsLayer.addTo(this.map);
+    this.map.flyTo(s.fly.center, s.fly.zoom, { duration:1.1 });
+    this.setState({ activeId:id });
+  };
+
+  resetView = () => {
+    if (this.map){
+      if (this.map.hasLayer(this.labelsLayer)) this.map.removeLayer(this.labelsLayer);
+      STOPS.forEach(o => { if (!this.map.hasLayer(this.markers[o.id])) this.markers[o.id].addTo(this.map); });
+      if (!this.map.hasLayer(this.lines)) this.lines.addTo(this.map);
+      this.unlock();
+      this.map.flyToBounds(HOME_BOUNDS, Object.assign({ duration:1.1 }, FIT));
+      this.map.once('moveend', this.lockHome);
+    }
+    this.setState({ activeId:null });
+  };
+
+  renderVals(){
+    const s = STOPS.find(x => x.id === this.state.activeId);
+    return {
+      mapRef: this.mapRef,
+      zoomed: !!s,
+      captionLabel: s ? s.fly.label : '',
+      detailOpen: !!s,
+      activeName: s ? s.name : '',
+      activeKicker: s ? s.kicker : '',
+      activeDates: s ? s.dates : '',
+      activeMeta: s ? `${s.role} · ${s.place}` : '',
+      activeCurrent: !!(s && s.current),
+      activeTags: s ? s.tags.map(t => TAGS[t]) : [],
+      activeHighlights: s ? s.highlights : [],
+      contactOpen: this.state.contactOpen,
+      openContact: () => this.setState({ contactOpen:true }),
+      closeContact: () => this.setState({ contactOpen:false }),
+      resetView: this.resetView,
+      swallow: e => e.stopPropagation()
+    };
+  }
+}
+</script>
+</body>
+
+</html>
