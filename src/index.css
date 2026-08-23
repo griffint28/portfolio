@@ -233,3 +233,20 @@ button {
 .hide-labels .stop-label {
   display: none;
 }
+
+/* Phones: six permanent tooltips at once at a necessarily lower zoom crowd
+   and overlap badly with the full name/dates/place stack. Drop to just the
+   station name, like a real subway map's overview -- dates/place still show
+   in the detail card once a stop is tapped. */
+@media (max-width: 640px) {
+  .stop-label {
+    padding: 2px 7px;
+  }
+  .stop-label .sl-name {
+    font-size: 11px;
+  }
+  .stop-label .sl-dates,
+  .stop-label .sl-place {
+    display: none;
+  }
+}

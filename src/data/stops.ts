@@ -95,7 +95,7 @@ export const STOPS: Stop[] = [
    clear of the intern line's I-26 descent; out of CofC up East Bay, over the
    Ravenel, north up Long Point Road, then I-526 over the Wando. */
 export const CAREER: Array<[number, number, number?]> = [
-  [36.5000, -80.4300],
+  [43.0000, -80.4300],
   [33.0400, -80.4300, 1],
   [32.9231, -80.4300, 1],
   [32.7845, -80.2649],
@@ -130,6 +130,10 @@ export const COFC = { maroon: '#660000', gold: '#bfa87c' };
 /* asymmetric fit reserves the chrome: name card top-right, map key bottom-left,
    zoom control bottom-right, so terminus labels never grow under a panel */
 export const FIT = { paddingTopLeft: [190, 120] as [number, number], paddingBottomRight: [280, 180] as [number, number] };
+
+/* Mobile: the name card and map key collapse to slim/compact chrome (see
+   TransitMap's isMobile branch), so far less padding needs to be reserved. */
+export const FIT_MOBILE = { paddingTopLeft: [16, 78] as [number, number], paddingBottomRight: [110, 96] as [number, number] };
 
 export const THEME = {
   career: '#b2622d',

@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from 'react';
 import L from 'leaflet';
-import { STOPS, CAREER, INTERN, HOME_BOUNDS, COFC, FIT, THEME, TAGS, type Stop } from '../data/stops';
+import { STOPS, CAREER, INTERN, HOME_BOUNDS, COFC, FIT, FIT_MOBILE, THEME, TAGS, type Stop } from '../data/stops';
 import { route } from '../lib/route';
 import { PROJECTS } from '../data/projects';
 
@@ -14,10 +14,29 @@ interface MapRefs {
   markers: Record<string, L.Marker>;
 }
 
-/* Hard floor: no window shape may zoom out past this, no matter what fitBounds
-   computes for a given aspect ratio (very tall/narrow windows can otherwise
-   compute a much lower zoom, re-exposing the off-screen line runoff below). */
+/* Below this width the name card and map key collapse to compact/toggle
+   chrome (see the isMobile branches in the JSX below) freeing up most of
+   the padding fitBounds would otherwise have to reserve for them. */
+const MOBILE_BQ = 640;
+
+/* Hard floors: no window shape may zoom out past these, no matter what
+   fitBounds computes for a given aspect ratio (a narrow/tall window can
+   otherwise compute a much lower zoom, re-exposing the off-screen line
+   runoff above Charlotte). Mobile gets its own, lower floor since a phone's
+   width is the binding dimension for this wide a route and the desktop
+   floor would crop Charlotte or Adaptive Bio off the initial view. */
 const HOME_MIN_ZOOM = 10;
+const HOME_MIN_ZOOM_MOBILE = 8.5;
+
+function isMobileWidth() {
+  return window.innerWidth <= MOBILE_BQ;
+}
+
+function responsiveFit() {
+  return isMobileWidth()
+    ? { fit: FIT_MOBILE, minZoom: HOME_MIN_ZOOM_MOBILE }
+    : { fit: FIT, minZoom: HOME_MIN_ZOOM };
+}
 
 function lockHome(map: L.Map) {
   map.setMinZoom(map.getZoom());
@@ -26,7 +45,7 @@ function lockHome(map: L.Map) {
 
 function unlock(map: L.Map) {
   map.setMaxBounds(null as unknown as L.LatLngBounds);
-  map.setMinZoom(HOME_MIN_ZOOM);
+  map.setMinZoom(responsiveFit().minZoom);
 }
 
 export default function TransitMap() {
@@ -35,12 +54,22 @@ export default function TransitMap() {
   const [activeId, setActiveId] = useState<string | null>(null);
   const [contactOpen, setContactOpen] = useState(false);
   const [projectsOpen, setProjectsOpen] = useState(false);
+  const [keyOpen, setKeyOpen] = useState(false);
+  const [isMobile, setIsMobile] = useState(() => (typeof window === 'undefined' ? false : isMobileWidth()));
   const activeIdRef = useRef<string | null>(null);
   const contactOpenRef = useRef(false);
   const projectsOpenRef = useRef(false);
+  const keyOpenRef = useRef(false);
   activeIdRef.current = activeId;
   contactOpenRef.current = contactOpen;
   projectsOpenRef.current = projectsOpen;
+  keyOpenRef.current = keyOpen;
+
+  useEffect(() => {
+    const onResize = () => setIsMobile(isMobileWidth());
+    window.addEventListener('resize', onResize);
+    return () => window.removeEventListener('resize', onResize);
+  }, []);
 
   const select = (id: string) => {
     const r = refs.current;
@@ -63,7 +92,7 @@ export default function TransitMap() {
       });
       if (!r.map.hasLayer(r.lines)) r.lines.addTo(r.map);
       unlock(r.map);
-      r.map.flyToBounds(L.latLngBounds(HOME_BOUNDS), { duration: 1.1, ...FIT });
+      r.map.flyToBounds(L.latLngBounds(HOME_BOUNDS), { duration: 1.1, ...responsiveFit().fit });
       r.map.once('moveend', () => lockHome(r.map));
     }
     setActiveId(null);
@@ -72,17 +101,18 @@ export default function TransitMap() {
   useEffect(() => {
     if (!containerRef.current || refs.current) return;
 
-    const map = L.map(containerRef.current, { zoomControl: false, zoomSnap: 0.25, minZoom: HOME_MIN_ZOOM, maxZoom: 17 });
+    const { fit, minZoom } = responsiveFit();
+    const map = L.map(containerRef.current, { zoomControl: false, zoomSnap: 0.25, minZoom, maxZoom: 17 });
     L.tileLayer('https://{s}.basemaps.cartocdn.com/light_nolabels/{z}/{x}/{y}{r}.png', {
       subdomains: 'abcd', attribution: '© OpenStreetMap contributors © CARTO', maxZoom: 19, detectRetina: true,
       updateWhenZooming: false, keepBuffer: 4,
     }).addTo(map);
     L.control.zoom({ position: 'bottomright' }).addTo(map);
-    map.fitBounds(L.latLngBounds(HOME_BOUNDS), FIT);
+    map.fitBounds(L.latLngBounds(HOME_BOUNDS), fit);
     map.on('resize', () => {
       if (!activeIdRef.current) {
         unlock(map);
-        map.fitBounds(L.latLngBounds(HOME_BOUNDS), FIT);
+        map.fitBounds(L.latLngBounds(HOME_BOUNDS), responsiveFit().fit);
         lockHome(map);
       }
     });
@@ -133,6 +163,7 @@ export default function TransitMap() {
       if (e.key !== 'Escape') return;
       if (contactOpenRef.current) setContactOpen(false);
       else if (projectsOpenRef.current) setProjectsOpen(false);
+      else if (keyOpenRef.current) setKeyOpen(false);
       else if (activeIdRef.current) resetView();
     };
     document.addEventListener('keydown', onKey);
@@ -147,6 +178,323 @@ export default function TransitMap() {
 
   const active: Stop | undefined = STOPS.find((x) => x.id === activeId);
   const swallow = (e: React.MouseEvent) => e.stopPropagation();
+
+  const legendRows = (
+    <>
+      <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 8, font: '400 12px var(--font-body)', color: 'var(--color-neutral-800)' }}>
+          <span style={{ width: 22, height: 5, borderRadius: 999, flex: '0 0 auto', background: 'var(--line-main)' }} />
+          Career line
+        </div>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 8, font: '400 12px var(--font-body)', color: 'var(--color-neutral-800)' }}>
+          <span style={{ width: 22, height: 5, borderRadius: 999, flex: '0 0 auto', background: 'var(--line-intern)' }} />
+          Internship line
+        </div>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 8, font: '400 12px var(--font-body)', color: 'var(--color-neutral-800)' }}>
+          <span style={{ width: 12, height: 12, borderRadius: 999, flex: '0 0 auto', boxSizing: 'border-box', background: '#fff', border: '3px solid #660000', boxShadow: '0 0 0 2px #bfa87c' }} />
+          Interchange (CofC)
+        </div>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 8, font: '400 12px var(--font-body)', color: 'var(--color-neutral-800)' }}>
+          <span style={{ width: 11, height: 11, borderRadius: 999, flex: '0 0 auto', background: 'var(--line-main)', boxShadow: '0 0 0 3px var(--color-accent-200)' }} />
+          You are here
+        </div>
+      </div>
+      <div style={{ borderTop: '1px solid var(--color-neutral-300)', margin: '10px 0 8px' }} />
+      <div style={{ font: '500 11px/1.4 var(--font-body)', color: 'var(--color-neutral-600)', maxWidth: 152 }}>
+        Tap a stop to fly the map to that part of the Lowcountry.
+      </div>
+    </>
+  );
+
+  if (isMobile) {
+    return (
+      <div style={{ position: 'fixed', inset: 0, background: 'var(--color-bg)' }}>
+        <div ref={containerRef} style={{ position: 'absolute', inset: 0 }} />
+
+        <div
+          style={{
+            position: 'absolute', top: 10, left: 10, right: 10, zIndex: 600, padding: '9px 13px 10px',
+            background: 'var(--color-neutral-100)', border: '1px solid var(--color-neutral-300)',
+            borderRadius: 'var(--radius-md)', boxShadow: 'var(--shadow-md)', overflow: 'hidden',
+          }}
+        >
+          <div
+            style={{
+              position: 'absolute', top: 0, left: 0, right: 0, height: 4,
+              background: 'linear-gradient(90deg,var(--line-main) 0 60%,var(--line-intern) 60% 100%)',
+            }}
+          />
+          <div style={{ display: 'flex', alignItems: 'baseline', gap: 8, flexWrap: 'wrap' }}>
+            <h1 style={{ font: '400 18px/1.1 var(--font-heading)', margin: 0 }}>Thomas Griffin</h1>
+            <span style={{ font: '600 11px var(--font-body)', color: 'var(--color-accent-700)' }}>Software Engineer</span>
+          </div>
+        </div>
+
+        {keyOpen && (
+          <div
+            onClick={() => setKeyOpen(false)}
+            style={{
+              position: 'fixed', inset: 0, zIndex: 1000, display: 'flex', alignItems: 'flex-end', justifyContent: 'center',
+              background: 'color-mix(in srgb, var(--color-neutral-900) 16%, transparent)',
+            }}
+          >
+            <div
+              onClick={swallow}
+              style={{
+                width: '100%', position: 'relative', background: 'var(--color-neutral-100)',
+                borderRadius: 'var(--radius-lg) var(--radius-lg) 0 0', boxShadow: 'var(--shadow-lg)',
+                padding: '22px 22px 28px', animation: 'card-in .18s ease-out',
+              }}
+            >
+              <div style={{ font: '600 9.5px/1 var(--font-body)', letterSpacing: '.1em', textTransform: 'uppercase', color: 'var(--color-neutral-600)', marginBottom: 12 }}>
+                Map Key
+              </div>
+              {legendRows}
+            </div>
+          </div>
+        )}
+
+        {active && (
+          <div
+            style={{
+              position: 'absolute', left: '50%', top: 78, transform: 'translateX(-50%)', zIndex: 900,
+              display: 'flex', alignItems: 'center', gap: 10, background: 'var(--color-neutral-100)',
+              border: '1px solid var(--color-neutral-300)', borderRadius: 999, padding: '7px 7px 7px 15px',
+              boxShadow: 'var(--shadow-md)',
+            }}
+          >
+            <span style={{ font: '400 14px var(--font-heading)', color: 'var(--color-neutral-900)', whiteSpace: 'nowrap' }}>
+              {active.fly.label}
+            </span>
+            <button
+              onClick={resetView}
+              aria-label="Back to the full coast"
+              style={{
+                border: 'none', background: 'var(--color-neutral-200)', cursor: 'pointer', width: 28, height: 28,
+                borderRadius: 999, display: 'grid', placeItems: 'center', fontSize: 14, color: 'var(--color-neutral-700)',
+              }}
+            >
+              &times;
+            </button>
+          </div>
+        )}
+
+        <div
+          style={{
+            position: 'absolute', left: '50%', bottom: 16, transform: 'translateX(-50%)', zIndex: 600,
+            display: 'flex', flexWrap: 'wrap', justifyContent: 'center', gap: 8, width: 'calc(100vw - 32px)',
+          }}
+        >
+          <button
+            onClick={() => setKeyOpen(true)}
+            aria-label="Show map key"
+            style={{
+              font: '600 12px var(--font-body)', color: 'var(--color-neutral-800)', background: 'var(--color-neutral-100)',
+              border: '1px solid var(--color-neutral-300)', borderRadius: 999, padding: '10px 15px', cursor: 'pointer',
+              boxShadow: 'var(--shadow-sm)', whiteSpace: 'nowrap',
+            }}
+          >
+            Map Key
+          </button>
+          <button
+            onClick={() => setProjectsOpen(true)}
+            style={{
+              font: '600 12px var(--font-body)', color: 'var(--color-neutral-800)', background: 'var(--color-neutral-200)',
+              border: 'none', borderRadius: 999, padding: '10px 15px', cursor: 'pointer', boxShadow: 'var(--shadow-sm)',
+              whiteSpace: 'nowrap',
+            }}
+          >
+            Projects
+          </button>
+          <button
+            onClick={() => setContactOpen(true)}
+            style={{
+              font: '600 12px var(--font-body)', color: 'var(--color-bg)', background: 'var(--line-main)',
+              border: 'none', borderRadius: 999, padding: '10px 15px', cursor: 'pointer', boxShadow: 'var(--shadow-sm)',
+              whiteSpace: 'nowrap',
+            }}
+          >
+            Contact &rarr;
+          </button>
+        </div>
+
+        {active && (
+          <div
+            onClick={resetView}
+            style={{
+              position: 'fixed', inset: 0, zIndex: 1000, display: 'flex', alignItems: 'flex-end', justifyContent: 'center',
+              background: 'color-mix(in srgb, var(--color-neutral-900) 16%, transparent)',
+            }}
+          >
+            <div
+              onClick={swallow}
+              style={{
+                width: '100%', maxHeight: '78vh', overflow: 'auto', position: 'relative',
+                background: 'var(--color-neutral-100)', borderRadius: 'var(--radius-lg) var(--radius-lg) 0 0',
+                boxShadow: 'var(--shadow-lg)', padding: '22px 22px 30px', animation: 'card-in .18s ease-out',
+              }}
+            >
+              <button
+                onClick={resetView}
+                aria-label="Close"
+                style={{
+                  position: 'absolute', top: 14, right: 14, border: 'none', background: 'var(--color-neutral-200)',
+                  cursor: 'pointer', width: 30, height: 30, borderRadius: 999, display: 'grid', placeItems: 'center',
+                  fontSize: 15, color: 'var(--color-neutral-700)',
+                }}
+              >
+                &times;
+              </button>
+              <div style={{ font: '600 9.5px/1 var(--font-body)', letterSpacing: '.13em', textTransform: 'uppercase', color: 'var(--color-accent-700)' }}>
+                {active.kicker}
+              </div>
+              <div style={{ display: 'flex', alignItems: 'flex-start', gap: 10, rowGap: 6, flexWrap: 'wrap', margin: '8px 0 0', paddingRight: 26 }}>
+                <h3 style={{ font: '400 21px/1.25 var(--font-heading)', margin: 0 }}>{active.name}</h3>
+                {active.current && (
+                  <span
+                    style={{
+                      font: '600 9.5px var(--font-body)', letterSpacing: '.08em', textTransform: 'uppercase',
+                      color: 'var(--color-bg)', background: 'var(--line-main)', borderRadius: 999, padding: '3px 9px',
+                      whiteSpace: 'nowrap',
+                    }}
+                  >
+                    You are here
+                  </span>
+                )}
+              </div>
+              <div style={{ font: '600 15px var(--font-body)', color: 'var(--color-accent-700)', margin: '10px 0 3px' }}>{active.dates}</div>
+              <div style={{ font: '400 13.5px var(--font-body)', color: 'var(--color-neutral-700)', marginBottom: 14 }}>
+                {active.role} · {active.place}
+              </div>
+              <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap', marginBottom: 14 }}>
+                {active.tags.map((t) => (
+                  <span key={t} style={{ font: '500 11px var(--font-body)', padding: '3px 10px', borderRadius: 999, background: TAGS[t].bg, color: TAGS[t].fg }}>
+                    {TAGS[t].label}
+                  </span>
+                ))}
+              </div>
+              <ul style={{ margin: 0, paddingLeft: 18, color: 'var(--color-neutral-800)', font: '400 14px/1.6 var(--font-body)' }}>
+                {active.highlights.map((h, i) => (
+                  <li key={i} style={{ marginBottom: 6 }}>{h}</li>
+                ))}
+              </ul>
+            </div>
+          </div>
+        )}
+
+        {contactOpen && (
+          <div
+            onClick={() => setContactOpen(false)}
+            style={{
+              position: 'fixed', inset: 0, zIndex: 1000, display: 'flex', alignItems: 'center', justifyContent: 'center',
+              background: 'color-mix(in srgb, var(--color-neutral-900) 16%, transparent)',
+            }}
+          >
+            <div
+              onClick={swallow}
+              style={{
+                width: 'min(430px, 90vw)', position: 'relative', background: 'var(--color-neutral-100)',
+                borderRadius: 'var(--radius-lg)', boxShadow: 'var(--shadow-lg)', padding: '24px 22px',
+                animation: 'card-in .18s ease-out',
+              }}
+            >
+              <button
+                onClick={() => setContactOpen(false)}
+                aria-label="Close"
+                style={{
+                  position: 'absolute', top: 14, right: 14, border: 'none', background: 'var(--color-neutral-200)',
+                  cursor: 'pointer', width: 30, height: 30, borderRadius: 999, display: 'grid', placeItems: 'center',
+                  fontSize: 15, color: 'var(--color-neutral-700)',
+                }}
+              >
+                &times;
+              </button>
+              <div style={{ font: '600 9.5px/1 var(--font-body)', letterSpacing: '.13em', textTransform: 'uppercase', color: 'var(--color-accent-700)' }}>
+                Next Stop
+              </div>
+              <h2 style={{ font: '400 24px var(--font-heading)', margin: '8px 0 16px' }}>Contact</h2>
+              <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap' }}>
+                <a href="#" style={{ font: '600 12px var(--font-body)', color: 'var(--color-bg)', background: 'var(--line-main)', borderRadius: 999, padding: '10px 17px' }}>
+                  Resume
+                </a>
+                <a href="mailto:ltgriffin01@gmail.com" style={{ font: '600 12px var(--font-body)', color: 'var(--color-neutral-800)', background: 'var(--color-neutral-200)', borderRadius: 999, padding: '10px 17px' }}>
+                  Email
+                </a>
+                <a href="#" style={{ font: '600 12px var(--font-body)', color: 'var(--color-neutral-800)', background: 'var(--color-neutral-200)', borderRadius: 999, padding: '10px 17px' }}>
+                  LinkedIn
+                </a>
+                <a href="#" style={{ font: '600 12px var(--font-body)', color: 'var(--color-neutral-800)', background: 'var(--color-neutral-200)', borderRadius: 999, padding: '10px 17px' }}>
+                  GitHub
+                </a>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {projectsOpen && (
+          <div
+            onClick={() => setProjectsOpen(false)}
+            style={{
+              position: 'fixed', inset: 0, zIndex: 1000, display: 'flex', alignItems: 'center', justifyContent: 'center',
+              background: 'color-mix(in srgb, var(--color-neutral-900) 16%, transparent)',
+            }}
+          >
+            <div
+              onClick={swallow}
+              style={{
+                width: 'min(480px, 90vw)', maxHeight: '80vh', overflow: 'auto', position: 'relative',
+                background: 'var(--color-neutral-100)', borderRadius: 'var(--radius-lg)', boxShadow: 'var(--shadow-lg)',
+                padding: '24px 22px', animation: 'card-in .18s ease-out',
+              }}
+            >
+              <button
+                onClick={() => setProjectsOpen(false)}
+                aria-label="Close"
+                style={{
+                  position: 'absolute', top: 14, right: 14, border: 'none', background: 'var(--color-neutral-200)',
+                  cursor: 'pointer', width: 30, height: 30, borderRadius: 999, display: 'grid', placeItems: 'center',
+                  fontSize: 15, color: 'var(--color-neutral-700)',
+                }}
+              >
+                &times;
+              </button>
+              <div style={{ font: '600 9.5px/1 var(--font-body)', letterSpacing: '.13em', textTransform: 'uppercase', color: 'var(--color-accent-700)' }}>
+                Next Stop
+              </div>
+              <h2 style={{ font: '400 24px var(--font-heading)', margin: '8px 0 18px' }}>Side Projects</h2>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
+                {PROJECTS.map((p) => (
+                  <div key={p.id} style={{ background: 'var(--color-surface)', borderRadius: 'var(--radius-md)', padding: '14px 16px' }}>
+                    <h3 style={{ font: '400 17px var(--font-heading)', margin: '0 0 6px' }}>{p.name}</h3>
+                    <p style={{ font: '400 13.5px/1.5 var(--font-body)', color: 'var(--color-neutral-700)', margin: '0 0 10px' }}>
+                      {p.description}
+                    </p>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 6, flexWrap: 'wrap' }}>
+                      {p.tags.map((t) => (
+                        <span key={t} style={{ font: '500 11px var(--font-body)', padding: '3px 10px', borderRadius: 999, background: TAGS[t].bg, color: TAGS[t].fg }}>
+                          {TAGS[t].label}
+                        </span>
+                      ))}
+                      {p.url && (
+                        <a href={p.url} style={{ font: '600 11px var(--font-body)', color: 'var(--color-accent-700)', marginLeft: 'auto' }}>
+                          View &rarr;
+                        </a>
+                      )}
+                      {!p.url && p.repoUrl && (
+                        <a href={p.repoUrl} style={{ font: '600 11px var(--font-body)', color: 'var(--color-accent-700)', marginLeft: 'auto' }}>
+                          Repo &rarr;
+                        </a>
+                      )}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
+        )}
+      </div>
+    );
+  }
 
   return (
     <div style={{ position: 'fixed', inset: 0, background: 'var(--color-bg)' }}>
@@ -185,28 +533,7 @@ export default function TransitMap() {
         <div style={{ font: '600 9.5px/1 var(--font-body)', letterSpacing: '.1em', textTransform: 'uppercase', color: 'var(--color-neutral-600)', marginBottom: 9 }}>
           Map Key
         </div>
-        <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 8, font: '400 12px var(--font-body)', color: 'var(--color-neutral-800)' }}>
-            <span style={{ width: 22, height: 5, borderRadius: 999, flex: '0 0 auto', background: 'var(--line-main)' }} />
-            Career line
-          </div>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 8, font: '400 12px var(--font-body)', color: 'var(--color-neutral-800)' }}>
-            <span style={{ width: 22, height: 5, borderRadius: 999, flex: '0 0 auto', background: 'var(--line-intern)' }} />
-            Internship line
-          </div>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 8, font: '400 12px var(--font-body)', color: 'var(--color-neutral-800)' }}>
-            <span style={{ width: 12, height: 12, borderRadius: 999, flex: '0 0 auto', boxSizing: 'border-box', background: '#fff', border: '3px solid #660000', boxShadow: '0 0 0 2px #bfa87c' }} />
-            Interchange (CofC)
-          </div>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 8, font: '400 12px var(--font-body)', color: 'var(--color-neutral-800)' }}>
-            <span style={{ width: 11, height: 11, borderRadius: 999, flex: '0 0 auto', background: 'var(--line-main)', boxShadow: '0 0 0 3px var(--color-accent-200)' }} />
-            You are here
-          </div>
-        </div>
-        <div style={{ borderTop: '1px solid var(--color-neutral-300)', margin: '10px 0 8px' }} />
-        <div style={{ font: '500 11px/1.4 var(--font-body)', color: 'var(--color-neutral-600)', maxWidth: 152 }}>
-          Tap a stop to fly the map to that part of the Lowcountry.
-        </div>
+        {legendRows}
       </div>
 
       {active && (
