@@ -95,7 +95,7 @@ export const STOPS: Stop[] = [
    clear of the intern line's I-26 descent; out of CofC up East Bay, over the
    Ravenel, north up Long Point Road, then I-526 over the Wando. */
 export const CAREER: Array<[number, number, number?]> = [
-  [33.3200, -80.4300],
+  [36.5000, -80.4300],
   [33.0400, -80.4300, 1],
   [32.9231, -80.4300, 1],
   [32.7845, -80.2649],

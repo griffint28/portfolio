@@ -14,6 +14,11 @@ interface MapRefs {
   markers: Record<string, L.Marker>;
 }
 
+/* Hard floor: no window shape may zoom out past this, no matter what fitBounds
+   computes for a given aspect ratio (very tall/narrow windows can otherwise
+   compute a much lower zoom, re-exposing the off-screen line runoff below). */
+const HOME_MIN_ZOOM = 10;
+
 function lockHome(map: L.Map) {
   map.setMinZoom(map.getZoom());
   map.setMaxBounds(L.latLngBounds(HOME_BOUNDS).pad(0.06));
@@ -21,7 +26,7 @@ function lockHome(map: L.Map) {
 
 function unlock(map: L.Map) {
   map.setMaxBounds(null as unknown as L.LatLngBounds);
-  map.setMinZoom(3);
+  map.setMinZoom(HOME_MIN_ZOOM);
 }
 
 export default function TransitMap() {
@@ -67,7 +72,7 @@ export default function TransitMap() {
   useEffect(() => {
     if (!containerRef.current || refs.current) return;
 
-    const map = L.map(containerRef.current, { zoomControl: false, zoomSnap: 0.25, minZoom: 8, maxZoom: 17 });
+    const map = L.map(containerRef.current, { zoomControl: false, zoomSnap: 0.25, minZoom: HOME_MIN_ZOOM, maxZoom: 17 });
     L.tileLayer('https://{s}.basemaps.cartocdn.com/light_nolabels/{z}/{x}/{y}{r}.png', {
       subdomains: 'abcd', attribution: '© OpenStreetMap contributors © CARTO', maxZoom: 19, detectRetina: true,
       updateWhenZooming: false, keepBuffer: 4,
