@@ -95,7 +95,7 @@ export const STOPS: Stop[] = [
    clear of the intern line's I-26 descent; out of CofC up East Bay, over the
    Ravenel, north up Long Point Road, then I-526 over the Wando. */
 export const CAREER: Array<[number, number, number?]> = [
-  [33.1500, -80.4300],
+  [33.3200, -80.4300],
   [33.0400, -80.4300, 1],
   [32.9231, -80.4300, 1],
   [32.7845, -80.2649],
@@ -122,14 +122,14 @@ export const INTERN: Array<[number, number, number?]> = [
   [32.6550, -79.7450, 1],
 ];
 
-export const HOME_BOUNDS: [[number, number], [number, number]] = [[32.628, -80.470], [33.058, -79.690]];
+export const HOME_BOUNDS: [[number, number], [number, number]] = [[32.645, -80.450], [33.055, -79.715]];
 
 /* College of Charleston brand: maroon ring, gold halo, white core */
 export const COFC = { maroon: '#660000', gold: '#bfa87c' };
 
 /* asymmetric fit reserves the chrome: name card top-right, map key bottom-left,
    zoom control bottom-right, so terminus labels never grow under a panel */
-export const FIT = { paddingTopLeft: [220, 150] as [number, number], paddingBottomRight: [320, 210] as [number, number] };
+export const FIT = { paddingTopLeft: [190, 120] as [number, number], paddingBottomRight: [280, 180] as [number, number] };
 
 export const THEME = {
   career: '#b2622d',
