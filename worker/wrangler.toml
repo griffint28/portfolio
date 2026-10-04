@@ -1,0 +1,14 @@
+name = "carto-tiles"
+main = "src/index.js"
+compatibility_date = "2026-09-01"
+
+# Public config. The site's own origins — anything not listed here gets a 403.
+# Hosts must match exactly, including scheme and port.
+[vars]
+ALLOWED_ORIGINS = "https://griffint28.github.io,http://localhost:5173,http://localhost:4173"
+
+# Sent as Referer on upstream CARTO calls, to satisfy the key's website
+# restriction. Must match the host allowed in the CARTO dashboard.
+CARTO_REFERER = "https://griffint28.github.io/"
+
+# CARTO_KEY is a secret, set with `wrangler secret put CARTO_KEY`. Never here.

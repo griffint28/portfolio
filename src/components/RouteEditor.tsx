@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from 'react';
 import L from 'leaflet';
 import { STOPS, CAREER, INTERN, THEME } from '../data/stops';
 import { route } from '../lib/route';
+import { basemapUrl, BASEMAP_OPTIONS } from '../lib/basemap';
 
 /* Local dev tool for hand-placing the transit line control points on the real
    map, then exporting them in the exact tuple format src/data/stops.ts expects.
@@ -71,9 +72,7 @@ export default function RouteEditor() {
     mapRef.current = map;
     map.setView([32.85, -79.95], 12);
 
-    L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png', {
-      subdomains: 'abcd', attribution: '© OpenStreetMap contributors © CARTO', maxZoom: 19, detectRetina: true,
-    }).addTo(map);
+    L.tileLayer(basemapUrl('light_all'), BASEMAP_OPTIONS).addTo(map);
     L.control.zoom({ position: 'topright' }).addTo(map);
 
     const layer = L.layerGroup().addTo(map);

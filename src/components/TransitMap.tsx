@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from 'react';
 import L from 'leaflet';
 import { STOPS, CAREER, INTERN, HOME_BOUNDS, COFC, FIT, FIT_MOBILE, THEME, TAGS, type Stop } from '../data/stops';
 import { route } from '../lib/route';
+import { basemapUrl, BASEMAP_OPTIONS } from '../lib/basemap';
 import { PROJECTS } from '../data/projects';
 
 interface MapRefs {
@@ -103,9 +104,8 @@ export default function TransitMap() {
 
     const { fit, minZoom } = responsiveFit();
     const map = L.map(containerRef.current, { zoomControl: false, zoomSnap: 0.25, minZoom, maxZoom: 17 });
-    L.tileLayer('https://{s}.basemaps.cartocdn.com/light_nolabels/{z}/{x}/{y}{r}.png', {
-      subdomains: 'abcd', attribution: '© OpenStreetMap contributors © CARTO', maxZoom: 19, detectRetina: true,
-      updateWhenZooming: false, keepBuffer: 4,
+    L.tileLayer(basemapUrl('light_nolabels'), {
+      ...BASEMAP_OPTIONS, updateWhenZooming: false, keepBuffer: 4,
     }).addTo(map);
     L.control.zoom({ position: 'bottomright' }).addTo(map);
     map.fitBounds(L.latLngBounds(HOME_BOUNDS), fit);
