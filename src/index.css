@@ -50,18 +50,34 @@
   --shadow-md: 0 3px 10px color-mix(in srgb, #2e2b25 16%, transparent);
   --shadow-lg: 0 12px 32px color-mix(in srgb, #2e2b25 22%, transparent);
 
-  /* Sand tile treatment (the design tool's default land preset) */
-  --tilefx: sepia(0.5) saturate(1.65) hue-rotate(-8deg) brightness(0.71) contrast(1.38);
-  /* Matches the *filtered* tile tone (measured ~rgb(201,200,179)), not the original
-     design's unfiltered water swatch (#a9bab7). This is the .leaflet-container's
-     fallback background, which briefly shows through gaps while new tiles are
-     loading during a zoom — since it isn't run through --tilefx, a color that looks
-     right pre-filter reads as a jarring blue-gray patch next to already-filtered
-     tiles. Matching the post-filter tone instead makes any gap nearly invisible. */
-  --water: #c9c8b3;
-  --label-bg: #e8d8b9;
-  --line-main: #b2622d;
-  --line-intern: #56633f;
+  /* Map palette -- mirrors DEFAULT_THEME in lib/theme.ts, which owns it.
+
+     theme.ts sets every one of these on :root at import time, so what you see
+     is always DEFAULT_THEME, never this block. Keeping them here is for
+     reading the stylesheet on its own -- every rule below resolves to a real
+     colour instead of a bare var() -- not for the first paint: Leaflet builds
+     the whole map in JS, so none of the elements these style exist until after
+     theme.ts has run. Edit them alone and nothing happens. The theme editor's
+     export emits this block alongside the object; paste both.
+
+     --tilefx is absent on purpose. The tile treatment is a lookup table now
+     (see the basemap comment in theme.ts) and no CSS filter function can
+     express one, so theme.ts builds an SVG filter and points --tilefx at it.
+
+     --water is .leaflet-container's background, which shows through the gaps
+     between tiles mid-zoom. It is NOT run through --tilefx, so it wants to
+     match what the ramp outputs for water, not the tile's input colour. */
+  --water: #8a9ea4;
+  --label-bg: #fdf8ec;
+  --label-text: #2b2720;
+  --line-main: #a54112;
+  --line-intern: #2d3f21;
+  --casing: #fdfaf0;
+  --stop-core: #ffffff;
+  --cofc-ring: #660000;
+  --cofc-halo: #bfa87c;
+  --cofc-halo-w: 5px;
+  --cofc-edge: #660000;
 
   color-scheme: light;
 }
@@ -102,7 +118,8 @@ button {
   font-family: var(--font-body);
 }
 
-/* tile treatment is driven from the app via --tilefx / --water */
+/* Tile treatment is driven from the app: theme.ts points --tilefx at the SVG
+   ramp filter it builds. Unset until then, hence the `none` fallback. */
 .leaflet-tile-pane {
   filter: var(--tilefx, none);
 }
@@ -146,7 +163,7 @@ button {
   position: relative;
   box-sizing: border-box;
   border-radius: 999px;
-  background: var(--color-neutral-100);
+  background: var(--stop-core, #f9f4ed);
   box-shadow: 0 1px 3px rgba(32, 30, 29, 0.28);
 }
 .stop:focus-visible {
@@ -196,10 +213,10 @@ button {
   }
 }
 .stop-label {
-  background: color-mix(in srgb, var(--label-bg, #f5ead8) 88%, transparent);
+  background: color-mix(in srgb, var(--label-bg, #f5ead8) 94%, transparent);
   border: none;
-  box-shadow: none;
-  padding: 3px 8px;
+  box-shadow: 0 1px 3px color-mix(in srgb, #2e2b25 20%, transparent);
+  padding: 3px 9px;
   margin: 0;
   white-space: nowrap;
   border-radius: 10px;
@@ -208,16 +225,19 @@ button {
   display: none;
 }
 .stop-label .sl-name {
-  font: 600 13.5px var(--font-body);
-  color: var(--color-neutral-900);
+  font: 700 13.5px var(--font-body);
+  color: var(--label-text, #1d1b17);
 }
 .stop-label .sl-dates {
   font: 600 11.5px var(--font-body);
   color: var(--line-main);
 }
+/* Derived from the chip's own text colour rather than a fixed neutral, so a
+   dark label chip keeps its secondary line readable instead of printing it in
+   near-black on near-black. */
 .stop-label .sl-place {
-  font: 400 11px var(--font-body);
-  color: var(--color-neutral-700);
+  font: 500 11px var(--font-body);
+  color: color-mix(in srgb, var(--label-text, #1d1b17) 68%, transparent);
 }
 .stop-label.intern .sl-dates {
   color: var(--line-intern);
@@ -234,19 +254,58 @@ button {
   display: none;
 }
 
-/* Phones: six permanent tooltips at once at a necessarily lower zoom crowd
-   and overlap badly with the full name/dates/place stack. Drop to just the
-   station name, like a real subway map's overview -- dates/place still show
-   in the detail card once a stop is tapped. */
+/* Phones: permanent tooltips are the thing that made the small map unreadable --
+   five name cards at a necessarily low zoom covered the lines they were labelling.
+   Take the words off the map entirely and put them in the station strip along the
+   bottom (see TransitMap's isMobile branch), which is how a transit app does it:
+   the map stays a clean diagram of lines and dots, the names live in a list you
+   scroll. Tapping either a dot or a strip pill opens the same detail card.
+   The zoom control goes too -- pinch already works, and that corner is needed. */
 @media (max-width: 640px) {
   .stop-label {
-    padding: 2px 7px;
-  }
-  .stop-label .sl-name {
-    font-size: 11px;
-  }
-  .stop-label .sl-dates,
-  .stop-label .sl-place {
     display: none;
   }
+  .leaflet-control-zoom {
+    display: none;
+  }
+}
+
+/* Station strip. Wraps rather than scrolls: with five stops a single scrolling
+   row pushed the current job off the right edge, and a stop you have to discover
+   by swiping is no better than the labels this strip replaced. */
+.station-strip {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 7px;
+  padding: 0 14px;
+}
+.station-pill {
+  flex: 0 0 auto;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font: 600 12px var(--font-body);
+  color: var(--color-neutral-800);
+  background: var(--color-neutral-100);
+  border: 1px solid var(--color-neutral-300);
+  border-radius: 999px;
+  padding: 7px 13px 7px 10px;
+  cursor: pointer;
+  box-shadow: var(--shadow-sm);
+  white-space: nowrap;
+}
+.station-pill[aria-pressed='true'] {
+  color: var(--color-neutral-100);
+  background: var(--color-neutral-900);
+  border-color: var(--color-neutral-900);
+}
+.station-pill .pip {
+  width: 9px;
+  height: 9px;
+  flex: 0 0 auto;
+  border-radius: 999px;
+  box-sizing: border-box;
+  border: 3px solid currentColor;
+  background: var(--color-neutral-100);
 }

@@ -1,24 +1,42 @@
 import { useEffect, useRef, useState } from 'react';
 import L from 'leaflet';
-import { STOPS, CAREER, INTERN, THEME } from '../data/stops';
+import { STOPS, CAREER, INTERN, type StopDir } from '../data/stops';
+import { DEFAULT_THEME } from '../lib/theme';
 import { route } from '../lib/route';
 import { basemapUrl, BASEMAP_OPTIONS } from '../lib/basemap';
 
-/* Local dev tool for hand-placing the transit line control points on the real
-   map, then exporting them in the exact tuple format src/data/stops.ts expects.
+/* Local dev tool for hand-placing things on the real map, then exporting them in
+   the exact format src/data/stops.ts expects. Two modes:
+     Lines — drag/add/delete the transit line control points (CAREER / INTERN)
+     Stops — drag the stations themselves and cycle their label direction
    Visit with ?edit=1. Not part of the production visitor experience. */
 
 type LineKey = 'career' | 'intern';
+type Mode = 'lines' | 'stops';
+
 interface EditPt {
   lat: number;
   lng: number;
   sharp: boolean; // true = exact vertex, no rounding (matches the `1` flag in CAREER/INTERN)
 }
 
+interface EditStop {
+  id: string;
+  lat: number;
+  lng: number;
+  dir: StopDir;
+}
+
 const STORAGE_KEY = 'routeEditor:v1';
+const STOPS_KEY = 'routeEditor:stops:v1';
+const DIRS: StopDir[] = ['left', 'right', 'top', 'bottom'];
 
 function fromTuples(pts: Array<[number, number, number?]>): EditPt[] {
   return pts.map(([lat, lng, s]) => ({ lat, lng, sharp: !!s }));
+}
+
+function shippedStops(): EditStop[] {
+  return STOPS.map((s) => ({ id: s.id, lat: s.at[0], lng: s.at[1], dir: s.dir }));
 }
 
 function loadInitial(): Record<LineKey, EditPt[]> {
@@ -31,6 +49,20 @@ function loadInitial(): Record<LineKey, EditPt[]> {
   return { career: fromTuples(CAREER), intern: fromTuples(INTERN) };
 }
 
+function loadInitialStops(): EditStop[] {
+  try {
+    const raw = localStorage.getItem(STOPS_KEY);
+    if (raw) {
+      const saved: EditStop[] = JSON.parse(raw);
+      // keep the shipped list authoritative so a removed/added stop still shows up
+      return shippedStops().map((s) => saved.find((o) => o.id === s.id) ?? s);
+    }
+  } catch {
+    /* ignore corrupt storage */
+  }
+  return shippedStops();
+}
+
 function formatArray(name: string, pts: EditPt[]): string {
   const lines = pts.map((p) => {
     const lat = p.lat.toFixed(4);
@@ -40,26 +72,41 @@ function formatArray(name: string, pts: EditPt[]): string {
   return `export const ${name}: Array<[number, number, number?]> = [\n${lines.join('\n')}\n];`;
 }
 
-const LINE_COLOR: Record<LineKey, string> = { career: THEME.career, intern: THEME.intern };
+function formatStops(stops: EditStop[]): string {
+  return stops
+    .map((s) => `${s.id}: at: [${s.lat.toFixed(4)}, ${s.lng.toFixed(4)}], dir: '${s.dir}',`)
+    .join('\n');
+}
+
+const LINE_COLOR: Record<LineKey, string> = { career: DEFAULT_THEME.career, intern: DEFAULT_THEME.intern };
 
 export default function RouteEditor() {
   const containerRef = useRef<HTMLDivElement>(null);
   const mapRef = useRef<L.Map | null>(null);
   const layerRef = useRef<L.LayerGroup | null>(null);
   const [lines, setLines] = useState<Record<LineKey, EditPt[]>>(loadInitial);
+  const [stops, setStops] = useState<EditStop[]>(loadInitialStops);
+  const [mode, setMode] = useState<Mode>('lines');
   const [active, setActive] = useState<LineKey>('career');
   const [selected, setSelected] = useState<number | null>(null);
+  const [selStop, setSelStop] = useState<string | null>(null);
   const [cursor, setCursor] = useState<{ lat: number; lng: number } | null>(null);
   const linesRef = useRef(lines);
   const activeRef = useRef(active);
   const selectedRef = useRef(selected);
+  const modeRef = useRef(mode);
   linesRef.current = lines;
   activeRef.current = active;
   selectedRef.current = selected;
+  modeRef.current = mode;
 
   useEffect(() => {
     localStorage.setItem(STORAGE_KEY, JSON.stringify(lines));
   }, [lines]);
+
+  useEffect(() => {
+    localStorage.setItem(STOPS_KEY, JSON.stringify(stops));
+  }, [stops]);
 
   const updateActive = (updater: (pts: EditPt[]) => EditPt[]) => {
     setLines((prev) => ({ ...prev, [activeRef.current]: updater(prev[activeRef.current]) }));
@@ -81,17 +128,14 @@ export default function RouteEditor() {
     map.on('mousemove', (e) => setCursor({ lat: e.latlng.lat, lng: e.latlng.lng }));
 
     map.on('click', (e) => {
-      // ignore clicks that originated on a marker (Leaflet stops propagation for those already,
-      // this handler only fires for genuine map-background clicks)
+      // appending points is a lines-mode gesture; in stops mode a stray map click
+      // should just clear the selection rather than grow the route
+      if (modeRef.current === 'stops') {
+        setSelStop(null);
+        return;
+      }
       updateActive((pts) => [...pts, { lat: e.latlng.lat, lng: e.latlng.lng, sharp: false }]);
       setSelected(null);
-    });
-
-    // static reference dots for the real stop locations, for eyeballing alignment
-    STOPS.forEach((s) => {
-      L.circleMarker(s.at, { radius: 4, color: '#333', weight: 1, fillColor: '#fff', fillOpacity: 1 })
-        .bindTooltip(s.name, { permanent: false, direction: 'top' })
-        .addTo(map);
     });
 
     return () => {
@@ -100,7 +144,7 @@ export default function RouteEditor() {
     };
   }, []);
 
-  // redraw editable layers whenever data/selection changes
+  // redraw editable layers whenever data/selection/mode changes
   useEffect(() => {
     const map = mapRef.current;
     const layer = layerRef.current;
@@ -109,7 +153,7 @@ export default function RouteEditor() {
 
     (['career', 'intern'] as LineKey[]).forEach((key) => {
       const pts = lines[key];
-      const isActive = key === active;
+      const isActive = mode === 'lines' && key === active;
       const color = LINE_COLOR[key];
 
       if (pts.length >= 2) {
@@ -144,10 +188,44 @@ export default function RouteEditor() {
         });
       });
     });
-  }, [lines, active, selected]);
+
+    // the stations: draggable in stops mode, plain reference dots otherwise
+    stops.forEach((s) => {
+      const meta = STOPS.find((o) => o.id === s.id);
+      const tint = meta?.kind === 'interchange' ? DEFAULT_THEME.cofcRing : meta?.line === 'intern' ? DEFAULT_THEME.intern : DEFAULT_THEME.career;
+      if (mode !== 'stops') {
+        L.circleMarker([s.lat, s.lng], { radius: 4, color: '#333', weight: 1, fillColor: '#fff', fillOpacity: 1 })
+          .bindTooltip(meta?.name ?? s.id, { direction: 'top' })
+          .addTo(layer);
+        return;
+      }
+      const isSel = s.id === selStop;
+      const marker = L.marker([s.lat, s.lng], {
+        draggable: true,
+        zIndexOffset: 400,
+        icon: L.divIcon({
+          className: '',
+          iconSize: [22, 22],
+          iconAnchor: [11, 11],
+          html: `<div style="width:22px;height:22px;border-radius:999px;background:#fff;
+            border:6px solid ${tint};box-shadow:0 0 0 ${isSel ? 3 : 1}px ${isSel ? '#fff' : 'rgba(0,0,0,.45)'};"></div>`,
+        }),
+      }).addTo(layer);
+      marker.bindTooltip(meta?.name ?? s.id, { direction: s.dir, permanent: true, opacity: 0.95 });
+      marker.on('dragend', () => {
+        const ll = marker.getLatLng();
+        setStops((cur) => cur.map((o) => (o.id === s.id ? { ...o, lat: ll.lat, lng: ll.lng } : o)));
+      });
+      marker.on('click', (e) => {
+        L.DomEvent.stopPropagation(e);
+        setSelStop(s.id);
+      });
+    });
+  }, [lines, active, selected, stops, mode, selStop]);
 
   const activePts = lines[active];
   const sel = selected !== null ? activePts[selected] : null;
+  const stop = stops.find((s) => s.id === selStop) ?? null;
 
   const move = (dir: -1 | 1) => {
     if (selected === null) return;
@@ -172,6 +250,11 @@ export default function RouteEditor() {
     setSelected(null);
   };
 
+  const cycleDir = () => {
+    if (!stop) return;
+    setStops((cur) => cur.map((o) => (o.id === stop.id ? { ...o, dir: DIRS[(DIRS.indexOf(o.dir) + 1) % DIRS.length] } : o)));
+  };
+
   const resetActive = () => {
     setLines((prev) => ({ ...prev, [active]: fromTuples(active === 'career' ? CAREER : INTERN) }));
     setSelected(null);
@@ -182,11 +265,15 @@ export default function RouteEditor() {
     setSelected(null);
   };
 
-  const [copied, setCopied] = useState<LineKey | null>(null);
-  const copy = async (key: LineKey) => {
-    const text = formatArray(key.toUpperCase(), lines[key]);
+  const resetStops = () => {
+    setStops(shippedStops());
+    setSelStop(null);
+  };
+
+  const [copied, setCopied] = useState<string | null>(null);
+  const copyText = async (tag: string, text: string) => {
     await navigator.clipboard.writeText(text);
-    setCopied(key);
+    setCopied(tag);
     setTimeout(() => setCopied(null), 1500);
   };
 
@@ -197,49 +284,97 @@ export default function RouteEditor() {
       <div style={{ width: 380, background: '#1c1a17', color: '#f0ece2', padding: 16, overflowY: 'auto', fontSize: 13, lineHeight: 1.5 }}>
         <h2 style={{ font: '600 15px system-ui', margin: '0 0 4px' }}>Route Editor</h2>
         <p style={{ opacity: 0.7, margin: '0 0 14px' }}>
-          Click the map to append a point to the active line. Click an existing point to select it
-          (toggle sharp/rounded, reorder, delete). Drag points to move them. Not shown to visitors —
-          this is dev-only, gated behind <code>?edit=1</code>.
+          Dev-only, gated behind <code>?edit=1</code>. Everything here is kept in localStorage, so
+          you can close the tab mid-edit — paste the export back into{' '}
+          <code>src/data/stops.ts</code> when you're happy.
         </p>
 
         <div style={{ display: 'flex', gap: 8, marginBottom: 12 }}>
-          {(['career', 'intern'] as LineKey[]).map((key) => (
+          {(['lines', 'stops'] as Mode[]).map((m) => (
             <button
-              key={key}
-              onClick={() => { setActive(key); setSelected(null); }}
+              key={m}
+              onClick={() => { setMode(m); setSelected(null); setSelStop(null); }}
               style={{
                 flex: 1, padding: '8px 10px', borderRadius: 8, cursor: 'pointer',
-                border: active === key ? `2px solid ${LINE_COLOR[key]}` : '2px solid transparent',
-                background: '#2a2620', color: LINE_COLOR[key], fontWeight: 600, textTransform: 'capitalize',
+                border: mode === m ? '2px solid #f0ece2' : '2px solid transparent',
+                background: mode === m ? '#3a352c' : '#2a2620', color: '#f0ece2', fontWeight: 600, textTransform: 'capitalize',
               }}
             >
-              {key} ({lines[key].length})
+              {m}
             </button>
           ))}
         </div>
 
-        {sel && (
-          <div style={{ background: '#2a2620', borderRadius: 8, padding: 12, marginBottom: 12 }}>
-            <div style={{ fontWeight: 600, marginBottom: 6 }}>Point #{selected}</div>
-            <div style={{ opacity: 0.8, marginBottom: 8 }}>
-              {sel.lat.toFixed(4)}, {sel.lng.toFixed(4)}
-            </div>
-            <label style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 8, cursor: 'pointer' }}>
-              <input type="checkbox" checked={sel.sharp} onChange={toggleSharp} />
-              Sharp vertex (no rounding)
-            </label>
-            <div style={{ display: 'flex', gap: 6 }}>
-              <button onClick={() => move(-1)} style={btnStyle}>↑ Move earlier</button>
-              <button onClick={() => move(1)} style={btnStyle}>↓ Move later</button>
-              <button onClick={remove} style={{ ...btnStyle, background: '#5a2a22', color: '#ffb3a3' }}>Delete</button>
-            </div>
-          </div>
-        )}
+        {mode === 'lines' ? (
+          <>
+            <p style={{ opacity: 0.7, margin: '0 0 12px' }}>
+              Click the map to append a point to the active line. Click a point to select it (toggle
+              sharp/rounded, reorder, delete). Drag points to move them.
+            </p>
 
-        <div style={{ display: 'flex', gap: 6, marginBottom: 16 }}>
-          <button onClick={resetActive} style={btnStyle}>Reset to shipped</button>
-          <button onClick={clearActive} style={btnStyle}>Clear all</button>
-        </div>
+            <div style={{ display: 'flex', gap: 8, marginBottom: 12 }}>
+              {(['career', 'intern'] as LineKey[]).map((key) => (
+                <button
+                  key={key}
+                  onClick={() => { setActive(key); setSelected(null); }}
+                  style={{
+                    flex: 1, padding: '8px 10px', borderRadius: 8, cursor: 'pointer',
+                    border: active === key ? `2px solid ${LINE_COLOR[key]}` : '2px solid transparent',
+                    background: '#2a2620', color: LINE_COLOR[key], fontWeight: 600, textTransform: 'capitalize',
+                  }}
+                >
+                  {key} ({lines[key].length})
+                </button>
+              ))}
+            </div>
+
+            {sel && (
+              <div style={{ background: '#2a2620', borderRadius: 8, padding: 12, marginBottom: 12 }}>
+                <div style={{ fontWeight: 600, marginBottom: 6 }}>Point #{selected}</div>
+                <div style={{ opacity: 0.8, marginBottom: 8 }}>
+                  {sel.lat.toFixed(4)}, {sel.lng.toFixed(4)}
+                </div>
+                <label style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 8, cursor: 'pointer' }}>
+                  <input type="checkbox" checked={sel.sharp} onChange={toggleSharp} />
+                  Sharp vertex (no rounding)
+                </label>
+                <div style={{ display: 'flex', gap: 6 }}>
+                  <button onClick={() => move(-1)} style={btnStyle}>↑ Move earlier</button>
+                  <button onClick={() => move(1)} style={btnStyle}>↓ Move later</button>
+                  <button onClick={remove} style={{ ...btnStyle, background: '#5a2a22', color: '#ffb3a3' }}>Delete</button>
+                </div>
+              </div>
+            )}
+
+            <div style={{ display: 'flex', gap: 6, marginBottom: 16 }}>
+              <button onClick={resetActive} style={btnStyle}>Reset to shipped</button>
+              <button onClick={clearActive} style={btnStyle}>Clear all</button>
+            </div>
+          </>
+        ) : (
+          <>
+            <p style={{ opacity: 0.7, margin: '0 0 12px' }}>
+              Drag a station to reposition it. Click one to select it, then cycle which side its
+              label sits on. The lines stay visible (dimmed) so you can keep stations on them.
+            </p>
+
+            {stop && (
+              <div style={{ background: '#2a2620', borderRadius: 8, padding: 12, marginBottom: 12 }}>
+                <div style={{ fontWeight: 600, marginBottom: 6 }}>
+                  {STOPS.find((o) => o.id === stop.id)?.name ?? stop.id}
+                </div>
+                <div style={{ opacity: 0.8, marginBottom: 8 }}>
+                  {stop.lat.toFixed(4)}, {stop.lng.toFixed(4)} · label: {stop.dir}
+                </div>
+                <button onClick={cycleDir} style={btnStyle}>Cycle label side →</button>
+              </div>
+            )}
+
+            <div style={{ display: 'flex', gap: 6, marginBottom: 16 }}>
+              <button onClick={resetStops} style={btnStyle}>Reset to shipped</button>
+            </div>
+          </>
+        )}
 
         {cursor && (
           <div style={{ opacity: 0.6, marginBottom: 16 }}>
@@ -249,24 +384,33 @@ export default function RouteEditor() {
 
         <div style={{ borderTop: '1px solid #3a352c', paddingTop: 12 }}>
           <div style={{ fontWeight: 600, marginBottom: 8 }}>Export</div>
-          {(['career', 'intern'] as LineKey[]).map((key) => (
-            <div key={key} style={{ marginBottom: 12 }}>
+
+          {mode === 'stops' ? (
+            <div style={{ marginBottom: 12 }}>
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 4 }}>
-                <span style={{ textTransform: 'capitalize', color: LINE_COLOR[key], fontWeight: 600 }}>{key}</span>
-                <button onClick={() => copy(key)} style={{ ...btnStyle, padding: '4px 10px' }}>
-                  {copied === key ? 'Copied!' : 'Copy'}
+                <span style={{ fontWeight: 600 }}>Stops</span>
+                <button onClick={() => copyText('stops', formatStops(stops))} style={{ ...btnStyle, padding: '4px 10px' }}>
+                  {copied === 'stops' ? 'Copied!' : 'Copy'}
                 </button>
               </div>
-              <textarea
-                readOnly
-                value={formatArray(key.toUpperCase(), lines[key])}
-                style={{
-                  width: '100%', height: 110, background: '#111', color: '#c9c2b3', fontFamily: 'ui-monospace, monospace',
-                  fontSize: 11, borderRadius: 6, border: '1px solid #3a352c', padding: 8, resize: 'vertical', boxSizing: 'border-box',
-                }}
-              />
+              <textarea readOnly value={formatStops(stops)} style={taStyle} />
+              <div style={{ opacity: 0.6, fontSize: 11 }}>
+                Paste each <code>at</code> / <code>dir</code> onto the matching stop in <code>STOPS</code>.
+              </div>
             </div>
-          ))}
+          ) : (
+            (['career', 'intern'] as LineKey[]).map((key) => (
+              <div key={key} style={{ marginBottom: 12 }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 4 }}>
+                  <span style={{ textTransform: 'capitalize', color: LINE_COLOR[key], fontWeight: 600 }}>{key}</span>
+                  <button onClick={() => copyText(key, formatArray(key.toUpperCase(), lines[key]))} style={{ ...btnStyle, padding: '4px 10px' }}>
+                    {copied === key ? 'Copied!' : 'Copy'}
+                  </button>
+                </div>
+                <textarea readOnly value={formatArray(key.toUpperCase(), lines[key])} style={taStyle} />
+              </div>
+            ))
+          )}
         </div>
       </div>
     </div>
@@ -276,4 +420,9 @@ export default function RouteEditor() {
 const btnStyle: React.CSSProperties = {
   flex: 1, padding: '6px 8px', borderRadius: 6, border: '1px solid #3a352c',
   background: '#332e26', color: '#f0ece2', cursor: 'pointer', fontSize: 12,
+};
+
+const taStyle: React.CSSProperties = {
+  width: '100%', height: 130, background: '#111', color: '#c9c2b3', fontFamily: 'ui-monospace, monospace',
+  fontSize: 11, borderRadius: 6, border: '1px solid #3a352c', padding: 8, resize: 'vertical', boxSizing: 'border-box',
 };

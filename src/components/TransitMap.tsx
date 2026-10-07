@@ -1,9 +1,10 @@
 import { useEffect, useRef, useState } from 'react';
 import L from 'leaflet';
-import { STOPS, CAREER, INTERN, HOME_BOUNDS, COFC, FIT, FIT_MOBILE, THEME, TAGS, type Stop } from '../data/stops';
+import { STOPS, CAREER, INTERN, HOME_BOUNDS, FIT, FIT_MOBILE, TAGS, type Stop } from '../data/stops';
 import { route } from '../lib/route';
 import { basemapUrl, BASEMAP_OPTIONS } from '../lib/basemap';
 import { PROJECTS } from '../data/projects';
+import { getTheme, subscribeTheme, type MapTheme } from '../lib/theme';
 
 interface MapRefs {
   map: L.Map;
@@ -42,6 +43,22 @@ function responsiveFit() {
 function lockHome(map: L.Map) {
   map.setMinZoom(map.getZoom());
   map.setMaxBounds(L.latLngBounds(HOME_BOUNDS).pad(0.06));
+}
+
+/* The four line layers, as derived from the palette. Casing sits under its
+   line and wider, which is what reads as a transit line rather than a road;
+   the career line is the heavier of the two because it is the spine. The
+   intern line's casing is 1px tighter than the career line's, matching its
+   1px-lighter stroke, so both show the same amount of casing each side. */
+type LineLayer = 'careerLine' | 'internLine' | 'careerCasing' | 'internCasing';
+
+function lineStyle(t: MapTheme, which: LineLayer): L.PathOptions {
+  switch (which) {
+    case 'careerLine': return { color: t.career, weight: t.weight };
+    case 'internLine': return { color: t.intern, weight: t.weight - 1 };
+    case 'careerCasing': return { color: t.casing, weight: t.weight + t.casingExtra };
+    case 'internCasing': return { color: t.casing, weight: t.weight + t.casingExtra - 1 };
+  }
 }
 
 function unlock(map: L.Map) {
@@ -109,30 +126,53 @@ export default function TransitMap() {
     }).addTo(map);
     L.control.zoom({ position: 'bottomright' }).addTo(map);
     map.fitBounds(L.latLngBounds(HOME_BOUNDS), fit);
+    /* animate:false matters. An animated fitBounds returns before the view has
+       settled, so the lockHome() right after it read a mid-flight zoom for
+       setMinZoom and let setMaxBounds pan the map while the zoom was still
+       running -- which left the SVG overlay pane (the lines) offset from the
+       marker pane (the stops) by a dozen-odd pixels until the next redraw.
+       Resizing the window was enough to knock every stop off its own line. */
     map.on('resize', () => {
-      if (!activeIdRef.current) {
-        unlock(map);
-        map.fitBounds(L.latLngBounds(HOME_BOUNDS), responsiveFit().fit);
-        lockHome(map);
-      }
+      if (activeIdRef.current) return;
+      unlock(map);
+      map.fitBounds(L.latLngBounds(HOME_BOUNDS), { ...responsiveFit().fit, animate: false });
+      lockHome(map);
     });
 
     const careerC = route(CAREER);
     const internC = route(INTERN);
     const lines = L.layerGroup().addTo(map);
     const base = { opacity: 1, lineCap: 'round' as const, lineJoin: 'round' as const };
-    const internCasing = L.polyline(internC, { ...base, color: '#f9f4ed', weight: THEME.weight + 5 }).addTo(lines);
-    const careerCasing = L.polyline(careerC, { ...base, color: '#f9f4ed', weight: THEME.weight + 6 }).addTo(lines);
-    const internLine = L.polyline(internC, { ...base, color: THEME.intern, weight: THEME.weight - 1 }).addTo(lines);
-    const careerLine = L.polyline(careerC, { ...base, color: THEME.career, weight: THEME.weight }).addTo(lines);
+    const t0 = getTheme();
+    const internCasing = L.polyline(internC, { ...base, ...lineStyle(t0, 'internCasing') }).addTo(lines);
+    const careerCasing = L.polyline(careerC, { ...base, ...lineStyle(t0, 'careerCasing') }).addTo(lines);
+    const internLine = L.polyline(internC, { ...base, ...lineStyle(t0, 'internLine') }).addTo(lines);
+    const careerLine = L.polyline(careerC, { ...base, ...lineStyle(t0, 'careerLine') }).addTo(lines);
 
     const markers: Record<string, L.Marker> = {};
     STOPS.forEach((s) => {
       const isX = s.kind === 'interchange';
-      const ring = isX ? COFC.maroon : s.line === 'intern' ? THEME.intern : THEME.career;
-      const size = isX ? 32 : s.kind === 'minor' ? 15 : 27;
-      const bw = isX ? 8 : s.kind === 'minor' ? 4 : 7;
-      const shadow = isX ? `box-shadow:0 0 0 4px ${COFC.gold},0 1px 4px rgba(32,30,29,.3);background:#fff;` : '';
+      /* Custom properties rather than the hex values behind them: everything
+         CSS draws then follows a retheme on its own, and only the polylines
+         below need restyling by hand. */
+      const ring = isX ? 'var(--cofc-ring)' : s.line === 'intern' ? 'var(--line-intern)' : 'var(--line-main)';
+      /* The interchange's box is SMALLER than a terminus's, not larger. What
+         makes it the biggest stop on the map is everything drawn outside it --
+         the gold band and its hairline add their width twice over, so growing
+         the box as well put the badge at 51px against a terminus's 27px and it
+         swamped the map. Shrinking the box buys that back and lets the gold
+         band stay wide, which is the part that has to read. */
+      const size = isX ? 25 : s.kind === 'minor' ? 15 : 27;
+      const bw = isX ? 6 : s.kind === 'minor' ? 4 : 7;
+      /* Widths come through custom properties too, not just colours, so the
+         editor's halo slider retints and resizes the badge without the markers
+         being torn down and rebuilt. calc() gives the outer hairline its
+         offset from the same variable. */
+      const shadow = isX
+        ? 'box-shadow:0 0 0 var(--cofc-halo-w) var(--cofc-halo),'
+          + '0 0 0 calc(var(--cofc-halo-w) + 1.5px) var(--cofc-edge),'
+          + '0 1px 5px rgba(32,30,29,.35);background:var(--stop-core);'
+        : '';
       const html = `<div class="stop${s.current ? ' current' : ''}" role="button" tabindex="0" aria-label="${s.name}" style="width:${size}px;height:${size}px;border:${bw}px solid ${ring};${shadow}"></div>`;
       const marker = L.marker(s.at, {
         icon: L.divIcon({ html, className: '', iconSize: [size, size], iconAnchor: [size / 2, size / 2] }),
@@ -159,6 +199,17 @@ export default function TransitMap() {
     refs.current = { map, lines, careerCasing, internCasing, careerLine, internLine, markers };
     lockHome(map);
 
+    /* Leaflet writes polyline colour into an SVG stroke attribute when the
+       layer is created, so unlike everything else on this map the lines do
+       not follow a custom-property change. Restyle them by hand when the
+       theme editor publishes one. In production this never fires. */
+    const unsubTheme = subscribeTheme((t) => {
+      careerCasing.setStyle(lineStyle(t, 'careerCasing'));
+      internCasing.setStyle(lineStyle(t, 'internCasing'));
+      careerLine.setStyle(lineStyle(t, 'careerLine'));
+      internLine.setStyle(lineStyle(t, 'internLine'));
+    });
+
     const onKey = (e: KeyboardEvent) => {
       if (e.key !== 'Escape') return;
       if (contactOpenRef.current) setContactOpen(false);
@@ -170,6 +221,7 @@ export default function TransitMap() {
 
     return () => {
       document.removeEventListener('keydown', onKey);
+      unsubTheme();
       map.remove();
       refs.current = null;
     };
@@ -178,6 +230,29 @@ export default function TransitMap() {
 
   const active: Stop | undefined = STOPS.find((x) => x.id === activeId);
   const swallow = (e: React.MouseEvent) => e.stopPropagation();
+
+  /* Phone replacement for the permanent map labels: the stations in journey
+     order, as wrapped pills. Colour-coded by line so the strip still explains
+     which branch a stop belongs to, and the active one inverts. */
+  const stationStrip = (
+    <div className="station-strip" role="group" aria-label="Stations">
+      {[...STOPS].sort((a, b) => a.seq - b.seq).map((s) => {
+        const on = s.id === activeId;
+        const tint = s.kind === 'interchange' ? 'var(--cofc-ring)' : s.line === 'intern' ? 'var(--line-intern)' : 'var(--line-main)';
+        return (
+          <button
+            key={s.id}
+            className="station-pill"
+            aria-pressed={on}
+            onClick={() => (on ? resetView() : select(s.id))}
+          >
+            <span className="pip" style={{ color: on ? '#fff' : tint }} />
+            {s.short}
+          </button>
+        );
+      })}
+    </div>
+  );
 
   const legendRows = (
     <>
@@ -191,7 +266,7 @@ export default function TransitMap() {
           Internship line
         </div>
         <div style={{ display: 'flex', alignItems: 'center', gap: 8, font: '400 12px var(--font-body)', color: 'var(--color-neutral-800)' }}>
-          <span style={{ width: 12, height: 12, borderRadius: 999, flex: '0 0 auto', boxSizing: 'border-box', background: '#fff', border: '3px solid #660000', boxShadow: '0 0 0 2px #bfa87c' }} />
+          <span style={{ width: 12, height: 12, borderRadius: 999, flex: '0 0 auto', boxSizing: 'border-box', background: 'var(--stop-core)', border: '3px solid var(--cofc-ring)', boxShadow: '0 0 0 2.5px var(--cofc-halo), 0 0 0 3.5px var(--cofc-edge)' }} />
           Interchange (CofC)
         </div>
         <div style={{ display: 'flex', alignItems: 'center', gap: 8, font: '400 12px var(--font-body)', color: 'var(--color-neutral-800)' }}>
@@ -208,7 +283,7 @@ export default function TransitMap() {
 
   if (isMobile) {
     return (
-      <div style={{ position: 'fixed', inset: 0, background: 'var(--color-bg)' }}>
+      <div style={{ position: 'fixed', top: 0, bottom: 0, left: 0, right: 'var(--map-inset-right, 0px)', background: 'var(--color-bg)' }}>
         <div ref={containerRef} style={{ position: 'absolute', inset: 0 }} />
 
         <div
@@ -281,41 +356,44 @@ export default function TransitMap() {
 
         <div
           style={{
-            position: 'absolute', left: '50%', bottom: 16, transform: 'translateX(-50%)', zIndex: 600,
-            display: 'flex', flexWrap: 'wrap', justifyContent: 'center', gap: 8, width: 'calc(100vw - 32px)',
+            position: 'absolute', left: 0, right: 0, bottom: 14, zIndex: 600,
+            display: 'flex', flexDirection: 'column', gap: 9,
           }}
         >
-          <button
-            onClick={() => setKeyOpen(true)}
-            aria-label="Show map key"
-            style={{
-              font: '600 12px var(--font-body)', color: 'var(--color-neutral-800)', background: 'var(--color-neutral-100)',
-              border: '1px solid var(--color-neutral-300)', borderRadius: 999, padding: '10px 15px', cursor: 'pointer',
-              boxShadow: 'var(--shadow-sm)', whiteSpace: 'nowrap',
-            }}
-          >
-            Map Key
-          </button>
-          <button
-            onClick={() => setProjectsOpen(true)}
-            style={{
-              font: '600 12px var(--font-body)', color: 'var(--color-neutral-800)', background: 'var(--color-neutral-200)',
-              border: 'none', borderRadius: 999, padding: '10px 15px', cursor: 'pointer', boxShadow: 'var(--shadow-sm)',
-              whiteSpace: 'nowrap',
-            }}
-          >
-            Projects
-          </button>
-          <button
-            onClick={() => setContactOpen(true)}
-            style={{
-              font: '600 12px var(--font-body)', color: 'var(--color-bg)', background: 'var(--line-main)',
-              border: 'none', borderRadius: 999, padding: '10px 15px', cursor: 'pointer', boxShadow: 'var(--shadow-sm)',
-              whiteSpace: 'nowrap',
-            }}
-          >
-            Contact &rarr;
-          </button>
+          {stationStrip}
+          <div style={{ display: 'flex', flexWrap: 'wrap', justifyContent: 'center', gap: 8, padding: '0 14px' }}>
+            <button
+              onClick={() => setKeyOpen(true)}
+              aria-label="Show map key"
+              style={{
+                font: '600 12px var(--font-body)', color: 'var(--color-neutral-800)', background: 'var(--color-neutral-100)',
+                border: '1px solid var(--color-neutral-300)', borderRadius: 999, padding: '10px 15px', cursor: 'pointer',
+                boxShadow: 'var(--shadow-sm)', whiteSpace: 'nowrap',
+              }}
+            >
+              Map Key
+            </button>
+            <button
+              onClick={() => setProjectsOpen(true)}
+              style={{
+                font: '600 12px var(--font-body)', color: 'var(--color-neutral-800)', background: 'var(--color-neutral-200)',
+                border: 'none', borderRadius: 999, padding: '10px 15px', cursor: 'pointer', boxShadow: 'var(--shadow-sm)',
+                whiteSpace: 'nowrap',
+              }}
+            >
+              Projects
+            </button>
+            <button
+              onClick={() => setContactOpen(true)}
+              style={{
+                font: '600 12px var(--font-body)', color: 'var(--color-bg)', background: 'var(--line-main)',
+                border: 'none', borderRadius: 999, padding: '10px 15px', cursor: 'pointer', boxShadow: 'var(--shadow-sm)',
+                whiteSpace: 'nowrap',
+              }}
+            >
+              Contact &rarr;
+            </button>
+          </div>
         </div>
 
         {active && (
@@ -497,7 +575,7 @@ export default function TransitMap() {
   }
 
   return (
-    <div style={{ position: 'fixed', inset: 0, background: 'var(--color-bg)' }}>
+    <div style={{ position: 'fixed', top: 0, bottom: 0, left: 0, right: 'var(--map-inset-right, 0px)', background: 'var(--color-bg)' }}>
       <div ref={containerRef} style={{ position: 'absolute', inset: 0 }} />
 
       <div
